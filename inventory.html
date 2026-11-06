@@ -1,0 +1,2678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inventory Management Menu</title>
+<style>
+:root{
+  --bg:#f3f5f7; --nav:#fff; --line:#e3e7ec; --text:#33404d; --muted:#6b7785;
+  --blue:#2f6fd6; --blue-bg:#e8f0fd; --hover:#f1f4f8; --teal:#0e7a6b; --card:#fff;
+  --shadow:0 8px 24px rgba(20,40,70,.14);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#12161b;--nav:#1a2027;--line:#2b333c;--text:#dbe2ea;--muted:#93a0ae;--blue:#6ea2f5;--blue-bg:#1f2d44;--hover:#222a33;--teal:#0e7a6b;--card:#1a2027;--shadow:0 8px 24px rgba(0,0,0,.5)}
+}
+:root[data-theme="dark"]{--bg:#12161b;--nav:#1a2027;--line:#2b333c;--text:#dbe2ea;--muted:#93a0ae;--blue:#6ea2f5;--blue-bg:#1f2d44;--hover:#222a33;--teal:#0e7a6b;--card:#1a2027;--shadow:0 8px 24px rgba(0,0,0,.5)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;min-height:100vh}
+
+nav{background:var(--nav);border-bottom:1px solid var(--line);display:flex;gap:4px;padding:0 12px;position:relative;z-index:20;overflow:visible}
+.item{position:relative}
+.top{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;height:56px;padding:0 22px;font-weight:600;font-size:15px;color:var(--text);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.top:hover{background:var(--hover)}
+.top:focus-visible,.sub a:focus-visible{outline:2px solid var(--blue);outline-offset:-3px}
+.top .ic{font-size:16px;line-height:1}
+.top .car{font-size:9px;color:var(--muted);transition:transform .15s}
+.item.open .top{color:var(--blue);background:var(--blue-bg);border-bottom-color:var(--blue)}
+.item.open .car{color:var(--blue);transform:rotate(180deg)}
+
+.sub{position:absolute;left:0;top:100%;min-width:230px;background:var(--nav);border:1px solid var(--line);border-radius:0 0 8px 8px;box-shadow:var(--shadow);padding:6px 0;margin:0;list-style:none;display:none}
+.item.open .sub{display:block;animation:drop .14s ease-out}
+@keyframes drop{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.item.open .sub{animation:none}.top .car{transition:none}}
+.sub a{display:flex;align-items:center;gap:14px;padding:13px 26px;color:var(--text);text-decoration:none;white-space:nowrap;cursor:pointer}
+.sub a::before{content:"";border-left:7px solid #8c97a5;border-top:5px solid transparent;border-bottom:5px solid transparent}
+.sub a:hover{background:var(--hover)}
+.sub a[aria-current="true"]{color:var(--blue);font-weight:600}
+.sub a[aria-current="true"]::before{border-left-color:var(--blue)}
+
+.hero{background:var(--teal);color:#fff;padding:22px 24px;display:flex;align-items:center;gap:16px}
+.logo{width:56px;height:56px;border-radius:14px;background:#fff;display:grid;place-items:center;font-size:28px;flex:none}
+.hero h1{margin:0;font-size:28px;line-height:1.1;font-weight:700}
+.hero p{margin:4px 0 0;font-size:13px;letter-spacing:.06em;opacity:.85}
+main{padding:20px 24px;max-width:960px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.card h2{margin:0 0 6px;font-size:16px}
+.card p{margin:0;color:var(--muted)}
+@media (max-width:640px){
+  nav{overflow-x:auto;padding:0 4px}
+  .top{padding:0 14px}
+  .item{position:static}
+  .sub{position:fixed;left:8px;right:8px;top:calc(56px + env(safe-area-inset-top,0px))}
+  .hero h1{font-size:22px}
+}
+main{max-width:1200px}
+.view{display:none}.view.on{display:block}
+.view .card+.card{margin-top:16px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 16px;margin-top:14px}
+.fld label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+.fld label i{color:#d64545;font-style:normal}
+.fld input,.fld select{width:100%;height:38px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--text);font:inherit}
+.fld input[readonly]{background:var(--hover);color:var(--muted)}
+.fld input:focus,.fld select:focus,.search:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.btn{height:38px;padding:0 18px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:var(--nav)}
+.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+#msg,#lmsg,#wmsg{font-size:13px;color:#d64545}#msg.ok,#lmsg.ok,#wmsg.ok{color:#23925a}
+.tools{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.tools h2{margin:0}
+.search{height:38px;width:260px;max-width:100%;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--text);font:inherit}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap;background:var(--hover)}
+th.n,td.n{text-align:right}
+.badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.badge.a{background:rgba(35,146,90,.16);color:#23925a}
+.badge.i{background:var(--hover);color:var(--muted)}
+.act{white-space:nowrap}
+.act button{border:0;background:none;color:var(--blue);font:inherit;font-weight:600;cursor:pointer;padding:2px 6px}
+.act button.d{color:#d64545}
+.empty{padding:22px;text-align:center;color:var(--muted)}
+.cb{position:relative}
+.fld .cb input{padding-right:28px}
+.cb .cc{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--muted);pointer-events:none}
+.cb ul{position:absolute;left:0;right:0;top:calc(100% + 4px);max-height:220px;overflow-y:auto;margin:0;padding:4px 0;list-style:none;background:var(--card);border:1px solid var(--line);border-radius:6px;box-shadow:var(--shadow);z-index:30;display:none}
+.cb.open ul{display:block}
+.cb li{padding:8px 12px;cursor:pointer}
+.cb li.sel{font-weight:600;color:var(--blue)}
+.cb li.hl{background:var(--blue-bg)}
+.cb li.none{color:var(--muted);cursor:default}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 26px}
+@media (max-width:900px){.pgrid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.pgrid{grid-template-columns:1fr}}
+.pl{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.pl label{margin:0}
+.ii{width:16px;height:16px;border-radius:50%;background:var(--blue);color:var(--nav);font:italic 700 11px/16px Georgia,serif;text-align:center;cursor:help;flex:none}
+#pRef{color:var(--blue);font-weight:700}
+.ph{display:flex;justify-content:space-between;align-items:center;margin:24px 0 10px}
+.ph h3{margin:0;font-size:15px}
+.pt{min-width:1560px}
+.pt th{background:#1e2a3f;color:#fff;font-size:12.5px;padding:10px 8px}
+.pt td{padding:6px 4px;border:0}
+.pt input{width:100%;height:34px;padding:0 8px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--text);font:inherit;font-size:13px}
+.pt .cb input{padding-right:22px}
+.pt input[readonly]{background:var(--hover);color:var(--muted)}
+.pt input.qty,.pt input.prc,.pt input.tot{text-align:right}
+.pt input.tot{background:rgba(35,146,90,.12);color:#23925a;font-weight:600}
+.pt input:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.pt .x{border:0;background:none;color:#d64545;font-size:15px;cursor:pointer;padding:4px 8px}
+.gt{margin-top:14px;display:flex;justify-content:flex-end;align-items:center;gap:36px;padding:14px 20px;background:var(--blue-bg);border:1px solid var(--line);border-radius:6px;font-weight:700;color:var(--blue)}
+.gt b{font-size:18px;color:var(--text)}
+.pbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:24px}
+.pb{height:40px;padding:0 24px;border:0;border-radius:4px;font:inherit;font-weight:600;cursor:pointer;color:#fff}
+.pb:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.pb:disabled{opacity:.5;cursor:default}
+.pb.show{background:#1d8fb0}
+.pb.save{background:#138a7b}
+.pb.exit{background:#f0b429;color:#3a2a00}
+.pb.add{background:#2f6fd6;height:34px;padding:0 16px}
+#prStatus{font-size:13px;color:#d64545}#prStatus.ok{color:#23925a}
+#prLog{display:none;margin-top:14px;border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--hover);font-size:13px}
+#prLog.on{display:block}
+.ptool{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.ptool h2{margin:0;font-size:17px}
+.pts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pts>input,.plm input{height:38px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--text);font:inherit}
+.pts>input{width:260px;max-width:100%}
+.plm{width:130px}
+.plm .cb input{width:100%;padding-right:26px}
+.pts .pb{height:38px}
+.pb.print{background:#0f8fc0}
+.pb.close{background:#d64545;padding:0 14px}
+.pb.draft{background:#52606f}
+.plnote{display:none;margin-bottom:12px;padding:9px 14px;border-radius:6px;background:rgba(35,146,90,.14);color:#23925a;font-weight:600;font-size:13px}
+.lt{min-width:980px}
+.lt th{color:var(--text);font-weight:700}
+.st{display:inline-block;padding:3px 12px;border-radius:99px;font-size:11.5px;font-weight:700;letter-spacing:.04em}
+.st.d{background:var(--hover);color:var(--muted)}
+.st.c{background:rgba(35,146,90,.16);color:#23925a}
+.more{font-size:12px;color:var(--muted)}
+.acts{white-space:nowrap}
+.ab{border:0;border-radius:4px;padding:6px 12px;margin-right:4px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.ab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.ab.v{background:#2f6fd6;color:#fff}
+.ab.p{background:#0f8fc0;color:#fff}
+.ab.dl{background:rgba(214,69,69,.14);color:#d64545}
+@media print{nav,.hero,.pts,.pbar,#prAdd,.plnote,.acts,.lt th:last-child,.pt .x{display:none!important}.card{border:0}}
+.pmode{width:140px}
+.pmode input{width:100%;height:40px;padding:0 26px 0 10px;border:1px solid var(--line);border-radius:4px;background:var(--card);color:var(--text);font:inherit}
+.pmode select,.plm select{width:100%;padding:0 10px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+.pmode select{height:40px;border-radius:4px}
+.plm select{height:38px;border-radius:6px}
+.pmode select:focus-visible,.plm select:focus-visible{outline:2px solid var(--blue);outline-offset:-1px}
+.pgrid4{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){.pgrid4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.pgrid4{grid-template-columns:1fr}}
+#sRef{color:var(--blue);font-weight:700}
+#sStatus{font-size:13px;color:#d64545}#sStatus.ok{color:#23925a}
+#sLog{display:none;margin-top:14px;border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--hover);font-size:13px}
+#sLog.on{display:block}
+@media print{#sAdd{display:none!important}}
+.gtabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.gtabs button{border:0;background:none;padding:10px 26px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.gtabs button:hover{background:var(--hover)}
+.gtabs button[aria-selected="true"]{color:var(--blue);border-bottom-color:var(--blue);background:var(--blue-bg)}
+.gtabs button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+#gStatus{font-size:13px;color:#d64545}#gStatus.ok{color:#23925a}
+#giStatus{font-size:13px;color:#d64545}#giStatus.ok{color:#23925a}
+.ihd{display:flex;align-items:center;gap:10px;margin:26px 0 10px}
+.tgl{width:22px;height:22px;padding:0;border:0;border-radius:4px;background:#e0524d;color:#fff;font-family:inherit;font-weight:700;font-size:16px;line-height:22px;cursor:pointer;text-align:center}
+.tgl:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.ibanner{padding:14px 18px;background:var(--hover);border:1px solid var(--line);border-bottom:0;border-radius:6px 6px 0 0;font-weight:600}
+.pt.it th{background:var(--hover);color:var(--text);font-weight:700;font-size:13.5px;padding:12px 8px;border-bottom:2px solid var(--line)}
+.pt.it input.rqty,.pt.it input.soh,.pt.it input.qty{text-align:right}
+.pb.gsave{background:#8e44ad}
+.pb.gsub{background:#1fa89a}
+#giLog{display:none;margin-top:14px;border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--hover);font-size:13px}
+#giLog.on{display:block}
+#irStatus{font-size:13px;color:#d64545}#irStatus.ok{color:#23925a}
+#irLog{display:none;margin-top:14px;border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--hover);font-size:13px}
+#irLog.on{display:block}
+.pt.it input.iss,.pt.it input.ret{text-align:right}
+.sync{all:unset;box-sizing:border-box;margin-left:auto;align-self:center;padding:6px 14px;border-radius:99px;font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap;border:1px solid var(--line);color:var(--muted);background:var(--hover)}
+.sync:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.sync.ok{color:#23925a;background:rgba(35,146,90,.12);border-color:transparent}
+.sync.busy{color:var(--blue);background:var(--blue-bg);border-color:transparent}
+.sync.bad{color:#d64545;background:rgba(214,69,69,.12);border-color:transparent}
+.sync.demo{color:#a8730a;background:rgba(240,180,41,.18);border-color:transparent}
+.st.w{background:rgba(240,180,41,.22);color:#a8730a}
+.st.r{background:rgba(214,69,69,.15);color:#d64545}
+.st.b{background:rgba(47,111,214,.14);color:#2f6fd6}
+.rpf{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 14px;margin-bottom:14px}
+.rpchk{align-self:end;padding-bottom:9px}
+.rpchk label{display:flex;align-items:center;gap:8px;margin:0;font-weight:600;cursor:pointer}
+.fld.rpchk input{width:auto;height:auto;margin:0}
+.rps{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.rpc{flex:1;min-width:140px;padding:12px 16px;border:1px solid var(--line);border-radius:8px;background:var(--hover)}
+.rpc b{display:block;font-size:20px;line-height:1.2}
+.rpc span{font-size:12px;color:var(--muted)}
+#rpMeta{margin:0 0 10px;font-size:12.5px;color:var(--muted)}
+#rpMeta.err{color:#d64545}
+.rp{min-width:1100px}
+.rp tfoot td{font-weight:700;background:var(--hover);border-top:2px solid var(--line)}
+.rp td{vertical-align:middle}
+@media print{#rpFilters,.sync{display:none!important}.rp{min-width:0;font-size:11px}}
+@media print{.gtabs,#giItemsWrap~.pbar{display:none!important}}
+@media print{.gtabs,#gAdd{display:none!important}}
+/* ---- sign in ---- */
+body.locked>nav,body.locked>header,body.locked>main{display:none}
+#authView{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:16px;background:var(--bg);overflow:auto}
+#authView.on{display:flex}
+.auc{width:100%;max-width:400px;margin:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.12);overflow:hidden}
+.auh{background:var(--teal);color:#fff;padding:20px 24px;display:flex;align-items:center;gap:14px}
+.auh b{display:block;font-size:17px}.auh span{display:block;font-size:11.5px;letter-spacing:.06em;opacity:.85}
+.aulogo{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:22px}
+.aub{padding:22px 24px 24px}
+.aub h2{margin:0 0 4px;font-size:18px}
+.aub .sub2{margin:0 0 14px;color:var(--muted);font-size:13.5px}
+.aub .fld{margin-bottom:14px}
+.aup{display:none}.aup.on{display:block}
+#auMsg{min-height:20px;margin:0 0 12px;font-size:13.5px;color:#d64545}
+#auMsg.ok{color:#23925a}#auMsg.info{color:var(--muted)}
+.pwrow{position:relative}.pwrow input{padding-right:62px}
+.eye{all:unset;box-sizing:border-box;position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:12px;font-weight:600;color:var(--blue);cursor:pointer;border-radius:4px}
+.eye:focus-visible,.aulink:focus-visible,.acct button:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+.aubtn{width:100%;height:42px;border:0;border-radius:6px;background:var(--blue);color:var(--nav);font:inherit;font-weight:600;cursor:pointer}
+.aubtn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.aubtn:disabled{opacity:.6;cursor:wait}
+.aulinks{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px}
+.aulink{all:unset;cursor:pointer;color:var(--blue);font-size:13.5px;font-weight:600;border-radius:3px}
+.aulink[hidden]{display:none}
+.acct{display:flex;align-items:center;gap:6px;align-self:center;padding-left:10px;font-size:13px;color:var(--muted);white-space:nowrap}
+.acct[hidden]{display:none}
+@media (min-width:641px){nav{flex-wrap:wrap;row-gap:0}.acct{margin-left:auto}.sync+.acct{margin-left:0}}
+.acct b{color:var(--text)}
+.acct button{all:unset;cursor:pointer;color:var(--blue);font-weight:600;font-size:13px;padding:4px 6px;border-radius:4px}
+.acct button:hover{background:var(--hover)}
+#acctMsg{color:#23925a;font-weight:600}
+.acct button[hidden]{display:none}
+#acctPend{color:#a8730a;background:rgba(240,180,41,.2);border-radius:99px;padding:3px 10px}
+#usPend select{height:32px;padding:0 6px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--text);font:inherit}
+#usMsg{font-size:13px;color:#d64545}#usMsg.ok{color:#23925a}
+#usTemp{display:none;margin:0 0 14px;padding:12px 14px;border:1px solid #23925a;border-radius:8px;background:rgba(35,146,90,.1);font-size:13.5px}
+#usTemp.on{display:block}
+#usTemp code{font:700 15px ui-monospace,Consolas,monospace;padding:2px 6px;background:var(--hover);border-radius:4px;user-select:all}
+#usTemp button{margin-left:8px;padding:3px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--text);font:inherit;font-size:12.5px;cursor:pointer}
+.aph{font-size:14px;margin:16px 0 6px}
+#apDetail{border:1px solid var(--line,#d9dee7);border-radius:8px;padding:14px;margin:14px 0}
+#apDetail textarea{width:100%;min-height:70px;margin:6px 0}
+#apOk{background:#1f9d62!important;color:#fff!important}#apDetail textarea{font:inherit}
+#apDetail .apb{display:flex;gap:8px;flex-wrap:wrap}
+.bell{position:relative}
+#notifPanel{position:absolute;right:8px;top:100%;z-index:30;width:min(360px,92vw);max-height:60vh;overflow:auto;background:var(--card,#fff);border:1px solid var(--line,#d9dee7);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:6px;white-space:normal}
+#notifPanel[hidden]{display:none}
+#notifPanel .nt{display:block;width:100%;text-align:left;padding:8px;border-radius:6px;font-size:13px;color:var(--text);cursor:pointer}
+#notifPanel .nt.un{background:rgba(59,130,246,.10);font-weight:600}
+#notifPanel .nt small{display:block;color:var(--muted);font-weight:400}
+</style>
+</head>
+<body class="locked">
+<div id="authView" role="dialog" aria-modal="true" aria-labelledby="auTitle">
+  <div class="auc">
+    <div class="auh"><div class="aulogo" aria-hidden="true">📋</div><div><b>Inventory Management</b><span>STOCK TRACKING • MOVEMENTS</span></div></div>
+    <div class="aub">
+      <h2 id="auTitle">Sign in</h2>
+      <p class="sub2" id="auSub"></p>
+      <p id="auMsg" role="alert"></p>
+      <form id="auLogin" class="aup" novalidate>
+        <div class="fld"><label for="auUid">User ID</label><input id="auUid" name="username" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+        <div class="fld"><label for="auPw">Password</label><div class="pwrow"><input id="auPw" name="password" type="password" autocomplete="current-password"></div></div>
+        <button class="aubtn" type="submit" id="auGo">Sign in</button>
+        <div class="aulinks"><button type="button" class="aulink" id="auToForgot">Forgot Password?</button><button type="button" class="aulink" id="auToReg">Register</button></div>
+      </form>
+      <form id="auForgot" class="aup" novalidate>
+        <div class="fld"><label for="auFUid">User ID</label><input id="auFUid" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+        <button class="aubtn" type="submit" id="auFGo">Send reset code</button>
+        <div class="aulinks"><button type="button" class="aulink" id="auFBack">Back to sign in</button><button type="button" class="aulink" id="auFHave">I already have a code</button></div>
+      </form>
+      <form id="auReset" class="aup" novalidate>
+        <div class="fld"><label for="auRUid">User ID</label><input id="auRUid" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+        <div class="fld"><label for="auRCode">Reset code</label><input id="auRCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code"></div>
+        <div class="fld"><label for="auRNew">New password</label><div class="pwrow"><input id="auRNew" type="password" autocomplete="new-password"></div></div>
+        <div class="fld"><label for="auRNew2">Confirm new password</label><div class="pwrow"><input id="auRNew2" type="password" autocomplete="new-password"></div></div>
+        <button class="aubtn" type="submit" id="auRGo">Reset password</button>
+        <div class="aulinks"><button type="button" class="aulink" id="auRBack">Back to sign in</button><button type="button" class="aulink" id="auRAgain">Send a new code</button></div>
+      </form>
+      <form id="auRegister" class="aup" novalidate>
+        <div class="fld"><label for="auGName">Full Name</label><input id="auGName" autocomplete="name"></div>
+        <div class="fld"><label for="auGUid">User ID</label><input id="auGUid" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="e.g. rahim.store"></div>
+        <div class="fld"><label for="auGEmail">Email</label><input id="auGEmail" type="email" autocomplete="email" placeholder="used to reset a forgotten password"></div>
+        <div class="fld"><label for="auGPw">Password</label><div class="pwrow"><input id="auGPw" type="password" autocomplete="new-password"></div></div>
+        <div class="fld"><label for="auGPw2">Confirm password</label><div class="pwrow"><input id="auGPw2" type="password" autocomplete="new-password"></div></div>
+        <button class="aubtn" type="submit" id="auGGo">Send request</button>
+        <div class="aulinks"><button type="button" class="aulink" id="auGBack">Back to sign in</button></div>
+      </form>
+      <form id="auChange" class="aup" novalidate>
+        <div class="fld"><label for="auCOld">Current password</label><div class="pwrow"><input id="auCOld" type="password" autocomplete="current-password"></div></div>
+        <div class="fld"><label for="auCNew">New password</label><div class="pwrow"><input id="auCNew" type="password" autocomplete="new-password"></div></div>
+        <div class="fld"><label for="auCNew2">Confirm new password</label><div class="pwrow"><input id="auCNew2" type="password" autocomplete="new-password"></div></div>
+        <button class="aubtn" type="submit" id="auCGo">Change password</button>
+        <div class="aulinks"><button type="button" class="aulink" id="auCCancel">Cancel</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+<nav id="nav" aria-label="Main menu"></nav>
+
+<header class="hero">
+  <div class="logo" aria-hidden="true">📋</div>
+  <div><h1>Inventory Management</h1><p>STOCK TRACKING • MOVEMENTS</p></div>
+</header>
+<main>
+  <section class="card" id="generic" aria-live="polite">
+    <h2 id="title">Purchase Requisition</h2>
+    <p id="path">Requisition › Purchase Requisition</p>
+  </section>
+<section id='itemView' class='view' aria-label='Item Master'>
+  <div class='card'>
+    <h2 id='formTitle'>Add item</h2>
+    <div class='fgrid'>
+      <div class='fld'><label for='fSl'>SL#</label><input id='fSl' readonly></div>
+      <div class='fld'><label for='fCat'>Item Category <i>*</i></label><input id='fCat' placeholder='Select category'></div>
+      <div class='fld'><label for='fSub'>Item Sub Category <i>*</i></label><input id='fSub' placeholder='Select sub category'></div>
+      <div class='fld'><label for='fCode'>Item Code <i>*</i></label><input id='fCode' autocomplete='off' placeholder='e.g. SP--001264'></div>
+      <div class='fld'><label for='fName'>Item Name <i>*</i></label><input id='fName' autocomplete='off'></div>
+      <div class='fld'><label for='fSpec'>Specification</label><input id='fSpec' autocomplete='off'></div>
+      <div class='fld'><label for='fUom'>UOM <i>*</i></label><input id='fUom' placeholder='Select or type'></div>
+      <div class='fld'><label for='fMin'>Min Stock</label><input id='fMin' type='number' min='0' step='any' placeholder='0'></div>
+      <div class='fld'><label for='fRo'>Reorder Level</label><input id='fRo' type='number' min='0' step='any' placeholder='0'></div>
+      <div class='fld'><label for='fStatus'>Status</label><input id='fStatus' value='Active'></div>
+    </div>
+    <div class='bar'>
+      <button type='button' class='btn pri' id='btnSave'>Save item</button>
+      <button type='button' class='btn' id='btnClear'>Clear</button>
+      <span id='msg' role='alert'></span>
+    </div>
+  </div>
+  <div class='card'>
+    <div class='tools'>
+      <h2>Item list <span id='count' style='font-weight:400;color:var(--muted);font-size:13px'></span></h2>
+      <input class='search' id='search' type='search' placeholder='Search code, name or category' aria-label='Search items'>
+    </div>
+    <div class='tw'>
+      <table>
+        <thead><tr><th>SL#</th><th>Item Category</th><th>Item Sub Category</th><th>Item Code</th><th>Item Name</th><th>Specification</th><th>UOM</th><th class='n'>Min Stock</th><th class='n'>Reorder Level</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id='tbody'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='locView' class='view' aria-label='Location Setup'>
+  <div class='card'>
+    <h2 id='lTitle'>Add location</h2>
+    <div class='fgrid'>
+      <div class='fld'><label for='lSl'>SL#</label><input id='lSl' readonly></div>
+      <div class='fld'><label for='lCo'>Company <i>*</i></label><input id='lCo' autocomplete='off' placeholder='Enter company'></div>
+      <div class='fld'><label for='lBu'>Business Unit <i>*</i></label><input id='lBu' autocomplete='off' placeholder='Enter business unit'></div>
+      <div class='fld'><label for='lPc'>Profit Center <i>*</i></label><input id='lPc' autocomplete='off' placeholder='Enter profit center'></div>
+      <div class='fld'><label for='lPl'>Plant <i>*</i></label><input id='lPl' autocomplete='off' placeholder='Enter plant'></div>
+      <div class='fld'><label for='lCc'>Cost Center <i>*</i></label><input id='lCc' autocomplete='off' placeholder='Enter cost center'></div>
+    </div>
+    <div class='bar'>
+      <button type='button' class='btn pri' id='lSave'>Save location</button>
+      <button type='button' class='btn' id='lClear'>Clear</button>
+      <span id='lmsg' role='alert'></span>
+    </div>
+  </div>
+  <div class='card'>
+    <div class='tools'>
+      <h2>Location list <span id='lcount' style='font-weight:400;color:var(--muted);font-size:13px'></span></h2>
+      <input class='search' id='lSearch' type='search' placeholder='Search location' aria-label='Search locations'>
+    </div>
+    <div class='tw'>
+      <table style='min-width:760px'>
+        <thead><tr><th>SL#</th><th>Company</th><th>Business Unit</th><th>Profit Center</th><th>Plant</th><th>Cost Center</th><th>Actions</th></tr></thead>
+        <tbody id='ltbody'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='whView' class='view' aria-label='Warehouse Setup'>
+  <div class='card'>
+    <h2 id='wTitle'>Add warehouse</h2>
+    <div class='fgrid'>
+      <div class='fld'><label for='wSl'>SL#</label><input id='wSl' readonly></div>
+      <div class='fld'><label for='wCo'>Company <i>*</i></label><input id='wCo' autocomplete='off' placeholder='Enter company'></div>
+      <div class='fld'><label for='wBu'>Business Unit <i>*</i></label><input id='wBu' autocomplete='off' placeholder='Enter business unit'></div>
+      <div class='fld'><label for='wPc'>Profit Center <i>*</i></label><input id='wPc' autocomplete='off' placeholder='Enter profit center'></div>
+      <div class='fld'><label for='wWh'>Warehouse <i>*</i></label><input id='wWh' autocomplete='off' placeholder='Enter warehouse'></div>
+    </div>
+    <div class='bar'>
+      <button type='button' class='btn pri' id='wSave'>Save warehouse</button>
+      <button type='button' class='btn' id='wClear'>Clear</button>
+      <span id='wmsg' role='alert'></span>
+    </div>
+  </div>
+  <div class='card'>
+    <div class='tools'>
+      <h2>Warehouse list <span id='wcount' style='font-weight:400;color:var(--muted);font-size:13px'></span></h2>
+      <input class='search' id='wSearch' type='search' placeholder='Search warehouse' aria-label='Search warehouses'>
+    </div>
+    <div class='tw'>
+      <table style='min-width:680px'>
+        <thead><tr><th>SL#</th><th>Company</th><th>Business Unit</th><th>Profit Center</th><th>Warehouse</th><th>Actions</th></tr></thead>
+        <tbody id='wtbody'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='prListView' class='view' aria-label='Purchase Requisition List'>
+  <div class='card'>
+    <div class='ptool'>
+      <h2><span aria-hidden='true'>📋</span> Purchase Requisition List</h2>
+      <div class='pts'>
+        <input id='plSearch' type='search' placeholder='Search by Ref#, Company, Item...' aria-label='Search requisitions'>
+        <div class='plm'><select id='plMode' aria-label='Mode'><option>Draft</option><option>Complete</option></select></div>
+        <button type='button' class='pb save' id='plAdd'>+ Add Purchase Requisition</button>
+        <button type='button' class='pb print' id='plPrint'>Print List</button>
+        <button type='button' class='pb close' id='plClose' aria-label='Close'>X</button>
+      </div>
+    </div>
+    <div id='plNote' class='plnote' role='status'></div>
+    <div class='tw'>
+      <table class='lt'>
+        <thead><tr><th>SL#</th><th>PR Ref#</th><th>Date</th><th>Company</th><th>Item Name</th><th>Item Code</th><th>Qty</th><th>UOM</th><th>Status</th><th>Raised By</th><th>Actions</th></tr></thead>
+        <tbody id='plBody'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='prView' class='view' aria-label='Purchase Requisition'>
+  <div class='card'>
+    <h2 id='prTitle' style='margin-bottom:14px'>New purchase requisition</h2>
+    <div class='pgrid' id='prGrid'></div>
+    <div class='ph'><h3>Requisition Details (Line Items)</h3><button type='button' class='pb add' id='prAdd'>+ Add Item</button></div>
+    <div class='tw'><table class='pt'><thead><tr id='prHead'></tr></thead><tbody id='prBody'></tbody></table></div>
+    <div class='gt'><span>Grand Total (Estimated):</span><b id='prGt'>0.00</b></div>
+    <div class='pbar'>
+      <button type='button' class='pb show' id='prShow' disabled>Show Message</button>
+      <div class='pmode' id='prModeBox'><select id='prMode' aria-label='Save mode'><option>Draft</option><option>Complete</option></select></div>
+      <button type='button' class='pb save' id='prSave'>Save</button>
+      <button type='button' class='pb exit' id='prExit'>Exit</button>
+      <span id='prStatus' role='alert'></span>
+    </div>
+    <div id='prLog'></div>
+  </div>
+</section>
+<section id='strListView' class='view' aria-label='Stock Transfer Requisition List'>
+  <div class='card'>
+    <div class='ptool'>
+      <h2><span aria-hidden='true'>🚚</span> Stock Transfer Requisition List</h2>
+      <div class='pts'>
+        <input id='slSearch' type='search' placeholder='Search by Ref#, Company, Item...' aria-label='Search transfer requisitions'>
+        <div class='plm'><select id='slMode' aria-label='Mode'><option>Draft</option><option>Complete</option></select></div>
+        <button type='button' class='pb save' id='slAdd'>+ Add Stock Transfer Requisition</button>
+        <button type='button' class='pb print' id='slPrint'>Print List</button>
+        <button type='button' class='pb close' id='slClose' aria-label='Close'>X</button>
+      </div>
+    </div>
+    <div id='slNote' class='plnote' role='status'></div>
+    <div class='tw'>
+      <table class='lt'>
+        <thead><tr><th>SL#</th><th>STR Ref#</th><th>Date</th><th>Company</th><th>Item Name</th><th>Item Code</th><th>Qty</th><th>UOM</th><th>Status</th><th>Raised By</th><th>Actions</th></tr></thead>
+        <tbody id='slBody'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='strView' class='view' aria-label='Stock Transfer Requisition'>
+  <div class='card'>
+    <h2 id='sTitle' style='margin-bottom:14px'>New stock transfer requisition</h2>
+    <div class='pgrid' id='sGrid1'></div>
+    <div class='pgrid pgrid4' id='sGrid2' style='margin-top:16px'></div>
+    <div class='ph'><h3>Line Items</h3><button type='button' class='pb add' id='sAdd'>➕ Add Item</button></div>
+    <div class='tw'><table class='pt' style='min-width:1340px'><thead><tr id='sHead'></tr></thead><tbody id='sBody'></tbody></table></div>
+    <div class='pbar'>
+      <button type='button' class='pb show' id='sShow' disabled>Show Message</button>
+      <button type='button' class='pb save' id='sSave'>Save</button>
+      <button type='button' class='pb exit' id='sExit'>Exit</button>
+      <span id='sStatus' role='alert'></span>
+    </div>
+    <div id='sLog'></div>
+  </div>
+</section>
+<section id='srListView' class='view' aria-label='Store Requisition List'>
+  <div class='card'>
+    <div class='ptool'>
+      <h2><span aria-hidden='true'>🏬</span> Store Requisition List</h2>
+      <div class='pts'>
+        <input id='qlSearch' type='search' placeholder='Search by Ref#, Company, Item...' aria-label='Search store requisitions'>
+        <div class='plm'><select id='qlMode' aria-label='Mode'><option>Draft</option><option>Complete</option></select></div>
+        <button type='button' class='pb save' id='qlAdd'>+ Add Store Requisition</button>
+        <button type='button' class='pb print' id='qlPrint'>Print List</button>
+        <button type='button' class='pb close' id='qlClose' aria-label='Close'>X</button>
+      </div>
+    </div>
+    <div id='qlNote' class='plnote' role='status'></div>
+    <div class='tw'>
+      <table class='lt'>
+        <thead><tr><th>SL#</th><th>SR Ref#</th><th>Date</th><th>Company</th><th>Cost Center</th><th>Item Name</th><th>Item Code</th><th>Qty</th><th>UOM</th><th>Status</th><th>Raised By</th><th>Actions</th></tr></thead>
+        <tbody id='qlBody'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='srView' class='view' aria-label='Store Requisition'>
+  <div class='card'>
+    <h2 id='qTitle' style='margin-bottom:14px'>New store requisition</h2>
+    <div class='pgrid pgrid4' id='qGrid'></div>
+    <div class='ph'><h3>Line Items</h3><button type='button' class='pb add' id='qAdd'>➕ Add Item</button></div>
+    <div class='tw'><table class='pt' style='min-width:1340px'><thead><tr id='qHead'></tr></thead><tbody id='qBody'></tbody></table></div>
+    <div class='pbar'>
+      <button type='button' class='pb show' id='qShow' disabled>Show Message</button>
+      <div class='pmode' id='qModeBox'><select id='qMode' aria-label='Save mode'><option>Draft</option><option>Complete</option></select></div>
+      <button type='button' class='pb save' id='qSave'>Save</button>
+      <button type='button' class='pb exit' id='qExit'>Exit</button>
+      <span id='qStatus' role='alert'></span>
+    </div>
+    <div id='qLog' style='display:none;margin-top:14px;border:1px solid var(--line);border-radius:6px;padding:10px 14px;background:var(--hover);font-size:13px'></div>
+  </div>
+</section>
+<section id='grView' class='view' aria-label='Goods Receive'>
+  <div class='card'>
+    <div class='gtabs' role='tablist' aria-label='Receive type'>
+      <button type='button' role='tab' id='gtP' aria-selected='true'>Purchase</button>
+      <button type='button' role='tab' id='gtT' aria-selected='false'>Transfer</button>
+    </div>
+    <h2 id='gTitle' style='margin-bottom:14px'>New goods receive (Purchase)</h2>
+    <div class='pgrid pgrid4' id='gGrid'></div>
+    <div class='ph'><h3>Line Items</h3><button type='button' class='pb add' id='gAdd'>➕ Add Item</button></div>
+    <div class='tw'><table class='pt' style='min-width:1560px'><thead><tr id='gHead'></tr></thead><tbody id='gBody'></tbody></table></div>
+    <div class='gt'><span>Grand Total:</span><b id='gGt'>0.00</b></div>
+    <div class='pbar'>
+      <button type='button' class='pb save' id='gSave'>Save</button>
+      <button type='button' class='pb exit' id='gClear'>Clear</button>
+      <span id='gStatus' role='alert'></span>
+    </div>
+  </div>
+  <div class='card'>
+    <div class='tools'>
+      <h2 id='gListTitle'>Purchase receive list</h2>
+      <input class='search' id='gSearch' type='search' placeholder='Search GRN, PR, PO, Company, Item' aria-label='Search goods receives'>
+    </div>
+    <div class='tw'>
+      <table class='lt'>
+        <thead><tr><th>SL#</th><th>GRN No</th><th>PR No</th><th>PO No</th><th>Company</th><th>Warehouse</th><th>Items</th><th class='n'>Total</th><th>Raised By</th><th>Actions</th></tr></thead>
+        <tbody id='gBodyList'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='giView' class='view' aria-label='Goods Issue'>
+  <div class='card' id='giFormCard'>
+    <div class='gtabs' role='tablist' aria-label='Issue type'>
+      <button type='button' role='tab' id='giTabC' aria-selected='true'>Consumption</button>
+      <button type='button' role='tab' id='giTabT' aria-selected='false'>Transfer</button>
+    </div>
+    <h2 id='giTitle' style='margin-bottom:14px'>New goods issue (Consumption)</h2>
+    <div class='pgrid' id='giGrid'></div>
+    <div class='ihd'>
+      <button type='button' class='tgl' id='giTgl' aria-expanded='true' aria-label='Collapse issue items'>&minus;</button>
+      <h3 id='giItemsT' style='margin:0;font-size:15px;font-weight:600'>Issue Items (0)</h3>
+    </div>
+    <div id='giItemsWrap'>
+      <div class='ibanner' id='giBanner'></div>
+      <div class='tw'><table class='pt it' style='min-width:1300px'><thead><tr id='giHead'></tr></thead><tbody id='giBody'></tbody></table></div>
+    </div>
+    <div class='pbar'>
+      <button type='button' class='pb show' id='giShow' disabled>Show Message</button>
+      <button type='button' class='pb gsave' id='giSave'>&#128190; Save</button>
+      <button type='button' class='pb gsub' id='giSubmit'>&#9989; Submit</button>
+      <button type='button' class='pb exit' id='giExit'>Exit</button>
+      <span id='giStatus' role='alert'></span>
+    </div>
+    <div id='giLog'></div>
+  </div>
+  <div class='card'>
+    <div class='tools'>
+      <h2 id='giListTitle'>Consumption issue list</h2>
+      <input class='search' id='giSearch' type='search' placeholder='Search GI No, SR Ref#, Company, Item' aria-label='Search goods issues'>
+    </div>
+    <div class='tw'>
+      <table class='lt'>
+        <thead><tr><th>SL#</th><th>GI No</th><th id='giRefTh'>SR Ref#</th><th>Issue Date</th><th>Company</th><th>Warehouse</th><th>Items</th><th>Status</th><th>Issued By</th><th>Actions</th></tr></thead>
+        <tbody id='giList'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='irView' class='view' aria-label='Issue Return'>
+  <div class='card' id='irFormCard'>
+    <div class='gtabs' role='tablist' aria-label='Return type'>
+      <button type='button' role='tab' id='irTabC' aria-selected='true'>Consumption</button>
+      <button type='button' role='tab' id='irTabT' aria-selected='false'>Transfer</button>
+    </div>
+    <h2 id='irTitle' style='margin-bottom:14px'>New issue return (Consumption)</h2>
+    <div class='pgrid' id='irGrid'></div>
+    <div class='ihd'>
+      <button type='button' class='tgl' id='irTgl' aria-expanded='true' aria-label='Collapse return items'>&minus;</button>
+      <h3 id='irItemsT' style='margin:0;font-size:15px;font-weight:600'>Return Items (0)</h3>
+    </div>
+    <div id='irItemsWrap'>
+      <div class='ibanner' id='irBanner'></div>
+      <div class='tw'><table class='pt it' style='min-width:1300px'><thead><tr id='irHead'></tr></thead><tbody id='irBody'></tbody></table></div>
+    </div>
+    <div class='pbar'>
+      <button type='button' class='pb show' id='irShow' disabled>Show Message</button>
+      <button type='button' class='pb gsave' id='irSave'>&#128190; Save</button>
+      <button type='button' class='pb gsub' id='irSubmit'>&#9989; Submit</button>
+      <button type='button' class='pb exit' id='irExit'>Exit</button>
+      <span id='irStatus' role='alert'></span>
+    </div>
+    <div id='irLog'></div>
+  </div>
+  <div class='card'>
+    <div class='tools'>
+      <h2 id='irListTitle'>Consumption return list</h2>
+      <input class='search' id='irSearch' type='search' placeholder='Search IR No, GI No, Company, Item' aria-label='Search issue returns'>
+    </div>
+    <div class='tw'>
+      <table class='lt'>
+        <thead><tr><th>SL#</th><th>IR No</th><th>GI No</th><th>Return Date</th><th>Company</th><th>Warehouse</th><th>Items</th><th>Status</th><th>Returned By</th><th>Actions</th></tr></thead>
+        <tbody id='irList'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+<section id='repView' class='view' aria-label='Report'>
+  <div class='card'>
+    <div class='ptool'>
+      <h2 id='rpTitle'>Report</h2>
+      <div class='pts'>
+        <button type='button' class='pb show' id='rpRefresh' title='Reload the data from the Google Sheet'>&#10227; Refresh</button>
+        <button type='button' class='pb save' id='rpCsv'>Export CSV</button>
+        <button type='button' class='pb print' id='rpPrint'>Print</button>
+      </div>
+    </div>
+    <div class='rpf' id='rpFilters'></div>
+    <div class='rps' id='rpSum'></div>
+    <p id='rpMeta' role='status'></p>
+    <div class='tw'>
+      <table class='lt rp'><thead id='rpHead'></thead><tbody id='rpBody'></tbody><tfoot id='rpFoot'></tfoot></table>
+    </div>
+  </div>
+</section>
+<section id='apView' class='view' aria-label='Approvals'>
+  <div class='card'>
+    <h2>Approvals</h2>
+    <p id='apNote' role='status' style='margin-bottom:10px'></p>
+    <h3 class='aph'>Waiting for my approval</h3>
+    <div class='tw'><table><thead><tr><th>Type</th><th>Ref #</th><th>Requested By</th><th>Date</th><th>Priority</th><th>Items</th><th>Step</th><th>Action</th></tr></thead><tbody id='apMine'></tbody></table></div>
+    <div id='apOthersWrap' hidden><h3 class='aph'>Other pending (admin override)</h3>
+    <div class='tw'><table><thead><tr><th>Type</th><th>Ref #</th><th>Requested By</th><th>Date</th><th>Priority</th><th>Items</th><th>Waiting for</th><th>Action</th></tr></thead><tbody id='apOthers'></tbody></table></div></div>
+    <div id='apDetail' hidden></div>
+    <h3 class='aph'>My recent decisions</h3>
+    <div class='tw'><table><thead><tr><th>When</th><th>Type</th><th>Ref #</th><th>Decision</th><th>Note</th></tr></thead><tbody id='apDone'></tbody></table></div>
+  </div>
+</section>
+<section id='usView' class='view' aria-label='User Setup'>
+  <div class='card' id='usFormCard'>
+    <h2 id='usTitle'>Add user</h2>
+    <p id='usNote' style='margin-bottom:12px'></p>
+    <div id='usTemp' role='status'></div>
+    <div id='usFormWrap'>
+      <div class='fgrid'>
+        <div class='fld'><label for='usUid'>User ID <i>*</i></label><input id='usUid' autocomplete='off' autocapitalize='off' spellcheck='false' placeholder='e.g. rahim.store'></div>
+        <div class='fld'><label for='usName'>Full Name <i>*</i></label><input id='usName' autocomplete='off'></div>
+        <div class='fld'><label for='usEmail'>Email</label><input id='usEmail' type='email' autocomplete='off' placeholder='needed for Forgot Password'></div>
+        <div class='fld'><label for='usRole'>Role</label><select id='usRole'><option>User</option><option>Admin</option></select></div>
+        <div class='fld'><label for='usStatus'>Status</label><select id='usStatus'><option>Active</option><option>Inactive</option></select></div>
+        <div class='fld'><label for='usAp1'>Approver 1</label><select id='usAp1'></select></div>
+        <div class='fld'><label for='usAp2'>Approver 2</label><select id='usAp2'></select></div>
+      </div>
+      <div class='pbar'>
+        <button type='button' class='pb gsave' id='usSave'>&#128190; Save</button>
+        <button type='button' class='pb exit' id='usClear'>Clear</button>
+        <span id='usMsg' role='alert'></span>
+      </div>
+    </div>
+  </div>
+  <div class='card' id='usPendCard' hidden>
+    <div class='tools'><h2 id='usPendT'>Pending registration requests</h2></div>
+    <div class='tw'>
+      <table class='lt'>
+        <thead><tr><th>User ID</th><th>Full Name</th><th>Email</th><th>Requested</th><th>Role</th><th>Actions</th></tr></thead>
+        <tbody id='usPend'></tbody>
+      </table>
+    </div>
+  </div>
+  <div class='card' id='usListCard'>
+    <div class='tools'><h2>Users</h2></div>
+    <div class='tw'>
+      <table class='lt'>
+        <thead><tr><th>SL#</th><th>User ID</th><th>Full Name</th><th>Email</th><th>Role</th><th>Status</th><th>Approvers (1 → 2)</th><th>Last Login</th><th>Actions</th></tr></thead>
+        <tbody id='usList'></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+/* ---- Google Sheet connection ----
+   A) Served from your Apps Script web app (file named Index): leave both empty, it connects by itself.
+   B) Opened from anywhere else: paste the Apps Script web app URL (ends with /exec) in GS_URL.
+   With a Google Sheet connected, everyone must sign in (users are kept in the Users tab, managed in Setup > User Setup). */
+const GS_URL='https://script.google.com/macros/s/AKfycbzRTcggzTMBl6kUS-ZDzvUDk07TmDaXixl-Wzpc3FoTOWLxUdA3pg7UAmr-wtAmRMGTqg/exec';
+const MENU=[
+  {id:'home',icon:'🏠',label:'Home',items:['Dashboard']},
+  {id:'setup',icon:'⚙️',label:'Setup',items:['Item Master','Cost Center Setup','Warehouse Setup','User Setup']},
+  {id:'req',icon:'📋',label:'Requisition',items:['Purchase Requisition','Stock Transfer Requisition','Store Requisition','Approvals']},
+  {id:'inv',icon:'📦',label:'Inventory',items:['Goods Receive','Goods Issue','Issue Return']},
+  {id:'rep',icon:'📊',label:'Report',items:['Stock Report','Receiving Report','Issuing Report','Issue Return Report','PR Status','SR Status']}
+];
+const nav=document.getElementById('nav');
+let current={menu:'req',item:'Purchase Requisition'};
+
+MENU.forEach(m=>{
+  const li=document.createElement('div');li.className='item';li.dataset.id=m.id;
+  li.innerHTML=`<button class="top" aria-haspopup="true" aria-expanded="false"><span class="ic">${m.icon}</span>${m.label}<span class="car">▼</span></button><ul class="sub"></ul>`;
+  const ul=li.querySelector('.sub');
+  m.items.forEach(name=>{
+    const a=document.createElement('a');a.tabIndex=0;a.textContent=name;a.dataset.name=name;
+    const pick=()=>{current={menu:m.id,item:name};document.getElementById('title').textContent=name;
+      document.getElementById('path').textContent=m.label+' › '+name;mark();closeAll();showView(name)};
+    a.addEventListener('click',pick);
+    a.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}});
+    const row=document.createElement('li');row.appendChild(a);ul.appendChild(row);
+  });
+  li.querySelector('.top').addEventListener('click',e=>{e.stopPropagation();toggle(li)});
+  nav.appendChild(li);
+});
+
+function mark(){
+  nav.querySelectorAll('.sub a').forEach(a=>{
+    const on=a.closest('.item').dataset.id===current.menu&&a.dataset.name===current.item;
+    on?a.setAttribute('aria-current','true'):a.removeAttribute('aria-current');
+  });
+}
+function closeAll(){nav.querySelectorAll('.item').forEach(i=>{i.classList.remove('open');i.querySelector('.top').setAttribute('aria-expanded','false')})}
+function toggle(li){
+  const was=li.classList.contains('open');closeAll();
+  if(!was){li.classList.add('open');li.querySelector('.top').setAttribute('aria-expanded','true')}
+}
+document.addEventListener('click',closeAll);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAll()});
+mark();
+/* ---------- Item Master ---------- */
+const CATS={'Spare Parts':['Extruder Parts','Bearings & Seals','Electrical','Mechanical'],'Stationery':['Office Supplies','Printing'],'Fuel & Lubricant':['Fuel','Lubricant'],'Lab':['Reagents','Lab Equipment']};
+const UOMS=['PCS','KG','LTR','MTR','BOX','SET'];
+const ITEMS=[
+ {code:'SP--001264',name:'Extruder Die 0.6 mm',spec:'120x2I twin screw extruder',cat:'Spare Parts',sub:'Extruder Parts',uom:'PCS',min:2,reorder:4,status:'Active'},
+ {code:'SP--000470',name:'Boom seal kit (Oil Seal)',spec:'12x22x8',cat:'Spare Parts',sub:'Bearings & Seals',uom:'PCS',min:5,reorder:10,status:'Active'},
+ {code:'SP--000162',name:'Compressor Oil',spec:'46 Grade',cat:'Fuel & Lubricant',sub:'Lubricant',uom:'LTR',min:20,reorder:40,status:'Active'},
+ {code:'CON-000001',name:'Diesel-Oil',spec:'',cat:'Fuel & Lubricant',sub:'Fuel',uom:'LTR',min:100,reorder:200,status:'Active'},
+ {code:'ST-000010',name:'A4 File',spec:'',cat:'Stationery',sub:'Office Supplies',uom:'PCS',min:10,reorder:20,status:'Inactive'}
+];
+let editing=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function opts(list,ph){return '<option value="">'+ph+'</option>'+list.map(v=>'<option>'+esc(v)+'</option>').join('')}
+const VIEWS=['apView','itemView','locView','whView','prView','prListView','strView','strListView','srView','srListView','grView','giView','irView','repView','usView'];
+function showPane(id){VIEWS.forEach(v=>$(v).classList.toggle('on',v===id));$('generic').style.display=id?'none':''}
+function showView(name){showPane({'Item Master':'itemView','Cost Center Setup':'locView','Warehouse Setup':'whView','Purchase Requisition':'prListView','Stock Transfer Requisition':'strListView','Store Requisition':'srListView','Goods Receive':'grView','Goods Issue':'giView','Issue Return':'irView','User Setup':'usView','Approvals':'apView','Stock Report':'repView','Receiving Report':'repView','Issuing Report':'repView','Issue Return Report':'repView','PR Status':'repView','SR Status':'repView'}[name]||'');if(name==='Goods Issue')giStockRefresh();if(typeof REP!=='undefined'&&REP[name])openReport(name);if(name==='User Setup'&&typeof openUsers==='function')openUsers();if(name==='Approvals')openApprovals()}
+function setMsg(t,ok){const m=$('msg');m.textContent=t;m.className=ok?'ok':''}
+function clearForm(keepMsg){
+ editing=null;
+ ['fCode','fName','fSpec','fMin','fRo'].forEach(id=>$(id).value='');
+ $('fCat').value='';$('fCat').onchange();$('fUom').value='';$('fStatus').value='Active';
+ $('fSl').value=ITEMS.length+1;$('formTitle').textContent='Add item';$('btnSave').textContent='Save item';
+ if(!keepMsg)setMsg('');
+}
+function editItem(i){
+ const d=ITEMS[i];editing=i;
+ $('fSl').value=i+1;$('fCode').value=d.code;$('fName').value=d.name;$('fSpec').value=d.spec;
+ $('fCat').value=d.cat;$('fCat').onchange();$('fSub').value=d.sub;$('fUom').value=d.uom;
+ $('fMin').value=d.min;$('fRo').value=d.reorder;$('fStatus').value=d.status;
+ $('formTitle').textContent='Edit item';$('btnSave').textContent='Update item';setMsg('');
+ $('fCode').focus();window.scrollTo({top:0,behavior:'smooth'});
+}
+function saveItem(){
+ const d={code:$('fCode').value.trim(),name:$('fName').value.trim(),spec:$('fSpec').value.trim(),cat:$('fCat').value,sub:$('fSub').value,uom:$('fUom').value.trim().toUpperCase(),min:$('fMin').value===''?0:+$('fMin').value,reorder:$('fRo').value===''?0:+$('fRo').value,status:$('fStatus').value};
+ let err='';
+ if(!d.code)err='Enter the item code.';
+ else if(!d.name)err='Enter the item name.';
+ else if(!CATS[d.cat])err='Select an item category from the list.';
+ else if(!(CATS[d.cat]||[]).includes(d.sub))err='Select an item sub category from the list.';
+ else if(!d.uom)err='Select or type a UOM.';
+ else if(d.min<0||d.reorder<0)err='Min stock and reorder level cannot be negative.';
+ else if(ITEMS.some((x,i)=>i!==editing&&x.code.toLowerCase()===d.code.toLowerCase()))err='This item code already exists.';
+ if(err){setMsg(err,false);return}
+ const upd=editing!==null;
+ if(!UOMS.includes(d.uom)){UOMS.push(d.uom)}
+ d._id=(upd&&ITEMS[editing]._id)||uid();
+ if(upd)ITEMS[editing]=d;else ITEMS.push(d);
+ pushMaster('items',d);
+ clearForm(true);renderItems();setMsg(upd?'Item updated.':'Item saved.',true);
+}
+function renderItems(){
+ const q=$('search').value.trim().toLowerCase();
+ const rows=ITEMS.map((d,i)=>({d,i})).filter(({d})=>!q||[d.code,d.name,d.spec,d.cat,d.sub].join(' ').toLowerCase().includes(q));
+ $('count').textContent='('+rows.length+' of '+ITEMS.length+')';
+ $('tbody').innerHTML=rows.length?rows.map(({d,i})=>`<tr><td>${i+1}</td><td>${esc(d.cat)}</td><td>${esc(d.sub)}</td><td>${esc(d.code)}</td><td>${esc(d.name)}</td><td>${esc(d.spec)}</td><td>${esc(d.uom)}</td><td class='n'>${d.min}</td><td class='n'>${d.reorder}</td><td><span class='badge ${d.status==='Active'?'a':'i'}'>${d.status}</span></td><td class='act'><button type='button' data-a='edit' data-i='${i}'>Edit</button><button type='button' class='d' data-a='del' data-i='${i}'>Delete</button></td></tr>`).join(''):"<tr><td colspan='11' class='empty'>No items found.</td></tr>";
+}
+
+
+$('fCat').onchange=()=>{if(!(CATS[$('fCat').value]||[]).includes($('fSub').value))$('fSub').value=''};
+function combo(id,cfg){
+ const el=$(id),w=document.createElement('div');w.className='cb';
+ el.parentNode.insertBefore(w,el);w.appendChild(el);
+ const ul=document.createElement('ul');ul.setAttribute('role','listbox');w.appendChild(ul);
+ const cc=document.createElement('span');cc.className='cc';cc.textContent='▼';w.appendChild(cc);
+ el.setAttribute('role','combobox');el.setAttribute('aria-expanded','false');el.autocomplete='off';
+ let hl=-1,shown=[];
+ const isOpen=()=>w.classList.contains('open');
+ function paint(){[...ul.children].forEach((li,i)=>li.classList.toggle('hl',i===hl))}
+ function scrollHl(){const li=ul.children[hl];if(!li)return;const t=li.offsetTop,b=t+li.offsetHeight;if(t<ul.scrollTop)ul.scrollTop=t;else if(b>ul.scrollTop+ul.clientHeight)ul.scrollTop=b-ul.clientHeight}
+ function draw(q){
+  const all=cfg.options(),t=(q||'').trim().toLowerCase(),cur=el.value.trim().toLowerCase();
+  shown=t?all.filter(o=>o.toLowerCase().includes(t)):all.slice();
+  const ex=shown.findIndex(o=>o.toLowerCase()===cur);
+  hl=ex>=0?ex:(t&&!cfg.free&&shown.length?0:-1);
+  ul.innerHTML=shown.length?shown.map((o,i)=>`<li role='option' data-i='${i}' class='${i===ex?'sel':''}'>${esc(o)}</li>`).join(''):`<li class='none'>${cfg.empty?cfg.empty():'No match'}</li>`;
+  paint();
+ }
+ function place(){if(!el.closest('.tw'))return;const r=el.getBoundingClientRect();Object.assign(ul.style,{position:'fixed',left:r.left+'px',top:(r.bottom+4)+'px',right:'auto',width:Math.max(r.width,200)+'px'})}
+ function open(all){draw(all?'':el.value);w.classList.add('open');el.setAttribute('aria-expanded','true');place();window.addEventListener('scroll',place,true);scrollHl()}
+ function close(){w.classList.remove('open');el.setAttribute('aria-expanded','false');window.removeEventListener('scroll',place,true)}
+ function pick(v){el.value=v;close();el.dispatchEvent(new Event('change'))}
+ el.addEventListener('focus',()=>open(true));
+ el.addEventListener('click',()=>{if(!isOpen())open(true)});
+ el.addEventListener('input',()=>open(false));
+ el.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+   e.preventDefault();
+   if(!isOpen()){open(true);return}
+   if(!shown.length)return;
+   hl=e.key==='ArrowDown'?(hl+1)%shown.length:(hl<=0?shown.length-1:hl-1);
+   paint();scrollHl();
+  }else if(e.key==='Enter'&&isOpen()){
+   if(hl>=0&&shown[hl]){e.preventDefault();e.stopImmediatePropagation();pick(shown[hl])}else close();
+  }else if(e.key==='Escape'&&isOpen()){close()}
+ });
+ ul.addEventListener('mousedown',e=>{const li=e.target.closest('li[data-i]');if(!li)return;e.preventDefault();pick(shown[+li.dataset.i])});
+ el.addEventListener('blur',()=>{
+  close();
+  if(cfg.free)return;
+  const v=el.value.trim().toLowerCase(),m=cfg.options().find(o=>o.toLowerCase()===v),nv=m||cfg.fallback||'';
+  if(nv!==el.value){el.value=nv;el.dispatchEvent(new Event('change'))}
+ });
+}
+combo('fCat',{options:()=>Object.keys(CATS)});
+combo('fSub',{options:()=>CATS[$('fCat').value]||[],empty:()=>$('fCat').value?'No match':'Select category first'});
+combo('fUom',{options:()=>UOMS,free:true});
+combo('fStatus',{options:()=>['Active','Inactive'],fallback:'Active'});
+$('btnSave').onclick=saveItem;
+$('btnClear').onclick=()=>clearForm();
+$('search').oninput=renderItems;
+document.querySelectorAll('#itemView .fld input').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')saveItem()}));
+$('tbody').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='edit')editItem(i);
+ else if(b.dataset.arm){
+  pushDelMaster('items',ITEMS[i]);ITEMS.splice(i,1);
+  if(editing===i)clearForm();else if(editing!==null&&i<editing){editing--;$('fSl').value=editing+1}else if(editing===null)$('fSl').value=ITEMS.length+1;
+  renderItems();
+ }else{
+  b.dataset.arm=1;b.textContent='Confirm';
+  setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000);
+ }
+};
+clearForm();renderItems();
+
+/* ---------- Location Setup ---------- */
+const LF=[['lCo','co','company'],['lBu','bu','business unit'],['lPc','pc','profit center'],['lPl','pl','plant'],['lCc','cc','cost center']];
+const LOCS=[
+ {co:'Astha Feed Industries Ltd',bu:'Astha Feed Mill',pc:'Feed Mill',pl:'Sonargaon Plant',cc:'Poultry Plant (Pellet)'},
+ {co:'Astha Feed Industries Ltd',bu:'Astha Feed Mill',pc:'Feed Mill',pl:'Sonargaon Plant',cc:'Poultry Plant (Mash)'},
+ {co:'Astha Feed Industries Ltd',bu:'Astha Feed Mill',pc:'Feed Mill',pl:'Sonargaon Plant',cc:'Cattle Plant'},
+ {co:'Astha Feed Industries Ltd',bu:'Astha Feed Mill',pc:'Feed Mill',pl:'Sonargaon Plant',cc:'Astha Feed Mill Common'}
+];
+let lEditing=null;
+function lMsg(t,ok){const m=$('lmsg');m.textContent=t;m.className=ok?'ok':''}
+function lOpts(k){
+ const ps=LF.slice(0,k).map(x=>$(x[0]).value.trim().toLowerCase()),out=[];
+ LOCS.forEach(r=>{if(ps.every((p,j)=>!p||r[LF[j][1]].toLowerCase()===p)){const v=r[LF[k][1]];if(v&&!out.includes(v))out.push(v)}});
+ return out;
+}
+function lcClear(keep){
+ lEditing=null;LF.forEach(x=>$(x[0]).value='');
+ $('lSl').value=LOCS.length+1;$('lTitle').textContent='Add location';$('lSave').textContent='Save location';
+ if(!keep)lMsg('');
+}
+function lcEdit(i){
+ const d=LOCS[i];lEditing=i;
+ LF.forEach(x=>$(x[0]).value=d[x[1]]);
+ $('lSl').value=i+1;$('lTitle').textContent='Edit location';$('lSave').textContent='Update location';lMsg('');
+ $('lCo').focus();window.scrollTo({top:0,behavior:'smooth'});
+}
+function lcSave(){
+ const d={};LF.forEach(x=>d[x[1]]=$(x[0]).value.trim());
+ let err='';
+ LF.forEach(x=>{if(!err&&!d[x[1]])err='Enter the '+x[2]+'.'});
+ if(!err){
+  LF.forEach(x=>{const m=LOCS.map(r=>r[x[1]]).find(v=>v.toLowerCase()===d[x[1]].toLowerCase());if(m)d[x[1]]=m});
+  if(LOCS.some((r,i)=>i!==lEditing&&LF.every(x=>r[x[1]]===d[x[1]])))err='This location already exists.';
+ }
+ if(err){lMsg(err,false);return}
+ const upd=lEditing!==null;
+ d._id=(upd&&LOCS[lEditing]._id)||uid();
+ if(upd)LOCS[lEditing]=d;else LOCS.push(d);
+ pushMaster('locs',d);
+ lcClear(true);lcRender();lMsg(upd?'Location updated.':'Location saved.',true);
+}
+function lcRender(){
+ const q=$('lSearch').value.trim().toLowerCase();
+ const rows=LOCS.map((d,i)=>({d,i})).filter(x=>!q||LF.map(f=>x.d[f[1]]).join(' ').toLowerCase().includes(q));
+ $('lcount').textContent='('+rows.length+' of '+LOCS.length+')';
+ $('ltbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${x.i+1}</td><td>${esc(x.d.co)}</td><td>${esc(x.d.bu)}</td><td>${esc(x.d.pc)}</td><td>${esc(x.d.pl)}</td><td>${esc(x.d.cc)}</td><td class='act'><button type='button' data-a='edit' data-i='${x.i}'>Edit</button><button type='button' class='d' data-a='del' data-i='${x.i}'>Delete</button></td></tr>`).join(''):"<tr><td colspan='7' class='empty'>No locations found.</td></tr>";
+}
+
+$('lSave').onclick=lcSave;
+$('lClear').onclick=()=>lcClear();
+$('lSearch').oninput=lcRender;
+document.querySelectorAll('#locView .fld input').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')lcSave()}));
+$('ltbody').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='edit')lcEdit(i);
+ else if(b.dataset.arm){
+  pushDelMaster('locs',LOCS[i]);LOCS.splice(i,1);
+  if(lEditing===i)lcClear();else if(lEditing!==null&&i<lEditing){lEditing--;$('lSl').value=lEditing+1}else if(lEditing===null)$('lSl').value=LOCS.length+1;
+  lcRender();
+ }else{
+  b.dataset.arm=1;b.textContent='Confirm';
+  setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000);
+ }
+};
+lcClear();lcRender();
+
+/* ---------- Warehouse Setup ---------- */
+const WF=[['wCo','co','company'],['wBu','bu','business unit'],['wPc','pc','profit center'],['wWh','wh','warehouse']];
+const WHS=[
+ {co:'Astha Feed Industries Ltd',bu:'Astha Feed Mill',pc:'Feed Mill',wh:'Main Store'},
+ {co:'Astha Feed Industries Ltd',bu:'Astha Feed Mill',pc:'Feed Mill',wh:'Spare Parts Store'}
+];
+let wEditing=null;
+function wMsg(t,ok){const m=$('wmsg');m.textContent=t;m.className=ok?'ok':''}
+function wcClear(keep){
+ wEditing=null;WF.forEach(x=>$(x[0]).value='');
+ $('wSl').value=WHS.length+1;$('wTitle').textContent='Add warehouse';$('wSave').textContent='Save warehouse';
+ if(!keep)wMsg('');
+}
+function wcEdit(i){
+ const d=WHS[i];wEditing=i;
+ WF.forEach(x=>$(x[0]).value=d[x[1]]);
+ $('wSl').value=i+1;$('wTitle').textContent='Edit warehouse';$('wSave').textContent='Update warehouse';wMsg('');
+ $('wCo').focus();window.scrollTo({top:0,behavior:'smooth'});
+}
+function wcSave(){
+ const d={};WF.forEach(x=>d[x[1]]=$(x[0]).value.trim());
+ let err='';
+ WF.forEach(x=>{if(!err&&!d[x[1]])err='Enter the '+x[2]+'.'});
+ if(!err){
+  WF.forEach(x=>{const m=WHS.map(r=>r[x[1]]).find(v=>v.toLowerCase()===d[x[1]].toLowerCase());if(m)d[x[1]]=m});
+  if(WHS.some((r,i)=>i!==wEditing&&WF.every(x=>r[x[1]]===d[x[1]])))err='This warehouse already exists.';
+ }
+ if(err){wMsg(err,false);return}
+ const upd=wEditing!==null;
+ d._id=(upd&&WHS[wEditing]._id)||uid();
+ if(upd)WHS[wEditing]=d;else WHS.push(d);
+ pushMaster('whs',d);
+ wcClear(true);wcRender();wMsg(upd?'Warehouse updated.':'Warehouse saved.',true);
+}
+function wcRender(){
+ const q=$('wSearch').value.trim().toLowerCase();
+ const rows=WHS.map((d,i)=>({d,i})).filter(x=>!q||WF.map(f=>x.d[f[1]]).join(' ').toLowerCase().includes(q));
+ $('wcount').textContent='('+rows.length+' of '+WHS.length+')';
+ $('wtbody').innerHTML=rows.length?rows.map(x=>`<tr><td>${x.i+1}</td><td>${esc(x.d.co)}</td><td>${esc(x.d.bu)}</td><td>${esc(x.d.pc)}</td><td>${esc(x.d.wh)}</td><td class='act'><button type='button' data-a='edit' data-i='${x.i}'>Edit</button><button type='button' class='d' data-a='del' data-i='${x.i}'>Delete</button></td></tr>`).join(''):"<tr><td colspan='6' class='empty'>No warehouses found.</td></tr>";
+}
+$('wSave').onclick=wcSave;
+$('wClear').onclick=()=>wcClear();
+$('wSearch').oninput=wcRender;
+document.querySelectorAll('#whView .fld input').forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')wcSave()}));
+$('wtbody').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='edit')wcEdit(i);
+ else if(b.dataset.arm){
+  pushDelMaster('whs',WHS[i]);WHS.splice(i,1);
+  if(wEditing===i)wcClear();else if(wEditing!==null&&i<wEditing){wEditing--;$('wSl').value=wEditing+1}else if(wEditing===null)$('wSl').value=WHS.length+1;
+  wcRender();
+ }else{
+  b.dataset.arm=1;b.textContent='Confirm';
+  setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000);
+ }
+};
+wcClear();wcRender();
+
+/* ---------- Purchase Requisition ---------- */
+const PRS=[],prLog=[];
+let prNo=1,rowSeq=0,prCur=null;
+const PRF=['pCo','pBu','pPc','pWh'];
+const PRFIELDS=[
+ ['pRef','PR Ref.#','System-generated requisition number','ro'],
+ ['pDate','Requisition Date','Date the requisition is raised','date'],
+ ['pCo','Company','Company raising the requisition','cb'],
+ ['pBu','Business Unit','Business unit under the company','cb'],
+ ['pPc','Profit Center','Profit center under the business unit','cb'],
+ ['pWh','Warehouse','Warehouse that will receive the items','cb'],
+ ['pPlan','Planning Ref.#','Reference number from the purchase plan, if any','text'],
+ ['pReqDt','Required Date','Date the items are needed by','date'],
+ ['pValid','Requisition Validity Date','Last date this requisition stays valid','date'],
+ ['pType','Requisition Type','Type of requisition','cb'],
+ ['pPri','Priority','How urgent the requisition is','cb'],
+ ['pHo','HO Purchase Station','Head office station that will purchase the items','cb'],
+ ['pRem','Remarks','Any additional remarks','text'],
+ ['pBy','Raised By','User raising the requisition','ro']
+];
+$('prGrid').innerHTML=PRFIELDS.map(f=>{
+ const t=f[3];
+ const inp=t==='date'?`<input id='${f[0]}' type='date'>`:t==='ro'?`<input id='${f[0]}' readonly>`:t==='cb'?`<input id='${f[0]}' placeholder='-- Select --'>`:`<input id='${f[0]}' autocomplete='off'>`;
+ return `<div class='fld'><div class='pl'><label for='${f[0]}'>${f[1]}</label><span class='ii' role='img' aria-label='${f[2]}' title='${f[2]}'>i</span></div>${inp}</div>`;
+}).join('');
+const PRCOLS=[['Line No.',72],['Item Category',160],['Item Name',200],['Item Code',120],['UOM',80],['Required Qty',110],['Est. Unit Price',120],['Line Total',110],['Item Specification',210],['Stock on Hand',110],['Last Req. Date',120],['Last Req. Qty',110],['',44]];
+$('prHead').innerHTML=PRCOLS.map(c=>`<th style='min-width:${c[1]}px'>${c[0]}</th>`).join('');
+const fmt=n=>(+n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const rq=(tr,c)=>tr.querySelector(c);
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function prOpts(k){
+ const keys=['co','bu','pc','wh'],src=k===3?WHS:LOCS.concat(WHS);
+ const sel=PRF.slice(0,k).map(id=>$(id).value.trim().toLowerCase()),out=[];
+ src.forEach(r=>{if(sel.every((s,j)=>!s||r[keys[j]].toLowerCase()===s)){const v=r[keys[k]];if(v&&!out.includes(v))out.push(v)}});
+ return out;
+}
+PRF.forEach((id,k)=>{
+ combo(id,{options:()=>prOpts(k)});
+ $(id).addEventListener('change',()=>{for(let j=k+1;j<4;j++){const e=$(PRF[j]);if(e.value&&!prOpts(j).some(o=>o.toLowerCase()===e.value.toLowerCase()))e.value=''}});
+});
+combo('pType',{options:()=>['Regular','Emergency','Project','Maintenance']});
+combo('pPri',{options:()=>['Low','Medium','High','Urgent']});
+combo('pHo',{options:()=>['Head Office','Factory Purchase','Local Purchase']});
+function rItems(n){const c=$('rc'+n).value;return [...new Set(ITEMS.filter(d=>d.status==='Active'&&(!c||d.cat===c)).map(d=>d.name))]}
+function rFind(n){const nm=$('rn'+n).value,c=$('rc'+n).value;return ITEMS.find(d=>d.name===nm&&(!c||d.cat===c))||null}
+function lastReq(code){for(let i=PRS.length-1;i>=0;i--){if(PRS[i].mode!=='Complete')continue;const l=PRS[i].lines.find(x=>x.code===code);if(l)return {d:PRS[i].date,q:l.qty}}return null}
+function fillRow(tr,it){
+ const lr=it?lastReq(it.code):null;
+ rq(tr,'.code').value=it?it.code:'';rq(tr,'.uom').value=it?it.uom:'';rq(tr,'.spec').value=it?it.spec:'';
+ rq(tr,'.soh').value=it?'0.00':'';
+ rq(tr,'.ldt').value=it?(lr?new Date(lr.d+'T00:00').toLocaleDateString('en-US'):'-'):'';
+ rq(tr,'.lqty').value=it?(lr?fmt(lr.q):'-'):'';
+}
+function prTotals(){
+ let gt=0;
+ [...$('prBody').children].forEach((tr,i)=>{
+  rq(tr,'.ln').value=(i+1)*10;
+  const t=(+rq(tr,'.qty').value||0)*(+rq(tr,'.prc').value||0);
+  rq(tr,'.tot').value=fmt(t);gt+=t;
+ });
+ $('prGt').textContent=fmt(gt);
+}
+function addRow(){
+ const n=++rowSeq,tr=document.createElement('tr');
+ tr.dataset.n=n;
+ tr.innerHTML=`<td><input class='ln' readonly aria-label='Line No.'></td><td><input id='rc${n}' placeholder='-- Select --' aria-label='Item Category'></td><td><input id='rn${n}' placeholder='-- Select --' aria-label='Item Name'></td><td><input class='code' readonly aria-label='Item Code'></td><td><input class='uom' readonly aria-label='UOM'></td><td><input class='qty' type='number' min='0' step='any' placeholder='0.00' aria-label='Required Qty'></td><td><input class='prc' type='number' min='0' step='any' placeholder='0.00' aria-label='Est. Unit Price'></td><td><input class='tot' readonly aria-label='Line Total'></td><td><input class='spec' autocomplete='off' aria-label='Item Specification'></td><td><input class='soh' readonly aria-label='Stock on Hand'></td><td><input class='ldt' readonly aria-label='Last Req. Date'></td><td><input class='lqty' readonly aria-label='Last Req. Qty'></td><td><button type='button' class='x' title='Remove line' aria-label='Remove line'>✕</button></td>`;
+ $('prBody').appendChild(tr);
+ combo('rc'+n,{options:()=>Object.keys(CATS)});
+ combo('rn'+n,{options:()=>rItems(n)});
+ $('rc'+n).addEventListener('change',()=>{const nm=$('rn'+n);if(nm.value&&!rItems(n).includes(nm.value)){nm.value='';fillRow(tr,null)}});
+ $('rn'+n).addEventListener('change',()=>{const it=rFind(n);if(it&&!$('rc'+n).value)$('rc'+n).value=it.cat;fillRow(tr,it)});
+ tr.addEventListener('input',e=>{if(e.target.matches('.qty,.prc'))prTotals()});
+ rq(tr,'.x').onclick=()=>{tr.remove();if(!$('prBody').children.length)addRow();prTotals()};
+ prTotals();
+}
+function renderLog(){$('prLog').innerHTML=prLog.slice().reverse().map(m=>`<div style='color:${m.ok?'#23925a':'#d64545'}'>${m.t}&nbsp;&nbsp;${esc(m.text)}</div>`).join('')}
+function prNote(text,ok){
+ $('prStatus').textContent=text;$('prStatus').className=ok?'ok':'';
+ prLog.push({t:new Date().toLocaleTimeString('en-US'),text,ok});
+ $('prShow').disabled=false;renderLog();
+}
+let USER='Demo User';   // replaced by the signed-in user's name
+const dt=d=>d.toLocaleString('en-US',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',','');
+function prDirty(){
+ if(['pCo','pBu','pPc','pWh','pPlan','pReqDt','pValid','pType','pPri','pHo','pRem'].some(id=>$(id).value.trim()))return true;
+ return [...$('prBody').children].some(tr=>{const n=tr.dataset.n;return $('rn'+n).value||$('rc'+n).value||rq(tr,'.qty').value||rq(tr,'.prc').value||rq(tr,'.spec').value.trim()});
+}
+function prLock(on){
+ $('prView').querySelectorAll('input,button.x').forEach(e=>e.disabled=on);
+ ['prAdd','prSave','prModeBox'].forEach(id=>$(id).hidden=on);
+}
+function prReset(){
+ prCur=null;
+ $('pRef').value='PR-'+String(prNo).padStart(6,'0');
+ $('pDate').value=today();
+ ['pCo','pBu','pPc','pWh','pPlan','pReqDt','pValid','pType','pPri','pHo','pRem'].forEach(id=>$(id).value='');
+ $('pBy').value=USER+', '+dt(new Date());$('prMode').value='Draft';
+ $('prBody').innerHTML='';addRow();
+ prLock(false);
+ $('prTitle').textContent='New purchase requisition';
+}
+function prOpen(i,print){
+ const p=PRS[i];
+ prReset();prCur=i;
+ $('pRef').value=p.ref;$('pDate').value=p.date;
+ [['pCo','co'],['pBu','bu'],['pPc','pc'],['pWh','wh'],['pPlan','plan'],['pReqDt','reqDate'],['pValid','validDate'],['pType','type'],['pPri','pri'],['pHo','ho'],['pRem','rem']].forEach(x=>$(x[0]).value=p[x[1]]||'');
+ $('pBy').value=p.by+', '+dt(new Date(p.at));
+ $('prBody').innerHTML='';
+ (p.lines.length?p.lines:[{}]).forEach(l=>{
+  addRow();const tr=$('prBody').lastElementChild,n=tr.dataset.n;
+  $('rc'+n).value=l.cat||'';$('rn'+n).value=l.name||'';
+  fillRow(tr,rFind(n));
+  rq(tr,'.spec').value=l.spec||'';rq(tr,'.qty').value=l.qty||'';rq(tr,'.prc').value=l.price||'';
+ });
+ prTotals();
+ $('prTitle').textContent=p.ref+' ('+p.mode+')';
+ prLock(p.mode==='Complete'||!mineDoc(p));apHint(p,'mode',prNote);
+ showPane('prView');
+ if(print)setTimeout(()=>{try{window.print()}catch(e){}},150);
+}
+function prSave(mode){
+ const v=id=>$(id).value.trim(),comp=mode==='Complete';
+ let err='';
+ if(comp){
+  const need=[['pDate','requisition date'],['pCo','company'],['pBu','business unit'],['pPc','profit center'],['pWh','warehouse'],['pReqDt','required date'],['pType','requisition type'],['pPri','priority']];
+  for(const x of need){if(!v(x[0])){err='The '+x[1]+' is required to complete.';break}}
+  if(!err&&v('pReqDt')<v('pDate'))err='Required date cannot be before the requisition date.';
+  if(!err&&v('pValid')&&v('pValid')<v('pDate'))err='Validity date cannot be before the requisition date.';
+ }else if(!v('pCo'))err='Select the company to save a draft.';
+ const lines=[];
+ if(!err){
+  [...$('prBody').children].forEach((tr,i)=>{
+   if(err)return;
+   const n=tr.dataset.n,name=$('rn'+n).value,cat=$('rc'+n).value,qty=+rq(tr,'.qty').value,price=+rq(tr,'.prc').value,spec=rq(tr,'.spec').value.trim();
+   if(!name&&!cat&&!qty&&!price&&!spec)return;
+   if(comp&&(!name||!(qty>0))){err='Line '+((i+1)*10)+': select an item and enter a required quantity.';return}
+   lines.push({line:(i+1)*10,cat,name,code:rq(tr,'.code').value,uom:rq(tr,'.uom').value,qty,price,total:qty*price,spec});
+  });
+  if(!err&&comp&&!lines.length)err='Add at least one item with a required quantity.';
+ }
+ if(err){prNote(err,false);return}
+ const rec={ref:v('pRef'),mode,date:v('pDate'),reqDate:v('pReqDt'),validDate:v('pValid'),co:v('pCo'),bu:v('pBu'),pc:v('pPc'),wh:v('pWh'),plan:v('pPlan'),type:v('pType'),pri:v('pPri'),ho:v('pHo'),rem:v('pRem'),by:prCur!==null?PRS[prCur].by:USER,at:prCur!==null?PRS[prCur].at:new Date().toISOString(),lines};
+ const prNew=prCur===null;
+ if(prCur!==null)PRS[prCur]=rec;else{PRS.push(rec);prNo++}
+ pushDoc('pr',rec,prNew,rec.ref);
+ const gt=lines.reduce((s,l)=>s+l.total,0);
+ prReset();
+ $('plMode').value=mode;
+ prNote(rec.ref+' saved as '+mode+'. Grand total '+fmt(gt)+'.',true);
+ plNote(rec.ref+' saved as '+mode+'.');
+ plRender();showPane('prListView');
+}
+function plNote(t){const n=$('plNote');n.textContent=t;n.style.display=t?'block':'none'}
+function plRender(){
+ const q=$('plSearch').value.trim().toLowerCase(),mode=$('plMode').value||'Draft';
+ const rows=PRS.map((p,i)=>({p,i})).filter(x=>{
+  if(x.p.mode!==mode)return false;
+  const l=x.p.lines[0]||{};
+  return !q||[x.p.ref,x.p.co,l.name,l.code].join(' ').toLowerCase().includes(q);
+ });
+ $('plBody').innerHTML=rows.length?rows.map((x,k)=>{
+  const p=x.p,l=p.lines[0]||{},more=p.lines.length>1?` <span class='more'>+${p.lines.length-1} more</span>`:'';
+  const del=p.mode==='Draft'?`<button type='button' class='ab dl' data-a='del' data-i='${x.i}'>Delete</button>`:'';
+  return `<tr><td>${k+1}</td><td><b>${esc(p.ref)}</b></td><td>${p.date?new Date(p.date+'T00:00').toLocaleDateString('en-US'):''}</td><td>${esc(p.co)}</td><td>${esc(l.name||'')}${more}</td><td>${esc(l.code||'')}</td><td>${l.qty||''}</td><td>${esc(l.uom||'')}</td><td>${docBadge(p,'mode','pr')}</td><td>${esc(p.by)}<div class='more'>${dt(new Date(p.at))}</div></td><td class='acts'><button type='button' class='ab v' data-a='view' data-i='${x.i}'>View</button><button type='button' class='ab p' data-a='print' data-i='${x.i}' aria-label='Print'>Print</button>${trk(p)}${del}</td></tr>`;
+ }).join(''):`<tr><td colspan='11' class='empty'>No ${esc(mode.toLowerCase())} requisitions. Click Add Purchase Requisition to create one.</td></tr>`;
+}
+let exitArm=false;
+$('plMode').addEventListener('change',()=>{plNote('');plRender()});
+$('plSearch').oninput=plRender;
+$('plAdd').onclick=()=>{plNote('');prReset();showPane('prView')};
+$('plPrint').onclick=()=>{try{window.print()}catch(e){plNote('Printing is not available here. Use your browser print option.')}};
+$('plClose').onclick=()=>nav.querySelector('.item[data-id=home] .sub a').click();
+$('plBody').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='view')prOpen(i);
+ else if(b.dataset.a==='print')prOpen(i,true);
+ else if(b.dataset.a==='track')openApDoc('pr',PRS[i].ref);
+ else if(b.dataset.arm){pushDel('pr',PRS[i].ref);PRS.splice(i,1);plNote('');plRender()}
+ else{b.dataset.arm=1;b.textContent='Confirm';setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000)}
+};
+$('prAdd').onclick=addRow;
+$('prSave').onclick=()=>prSave($('prMode').value||'Draft');
+$('prShow').onclick=()=>$('prLog').classList.toggle('on');
+$('prExit').onclick=()=>{
+ if(!exitArm&&!$('prSave').hidden&&prDirty()){exitArm=true;prNote('Unsaved changes will be lost. Click Exit again to leave.',false);setTimeout(()=>{exitArm=false},4000);return}
+ exitArm=false;prReset();plRender();showPane('prListView');
+};
+prReset();plRender();
+/* ---------- Stock Transfer Requisition ---------- */
+const STRS=[],sLog=[];
+let strNo=1,sRowSeq=0,sCur=null,sExitArm=false;
+const SF=['sCo','sBu','sPc','sWh'];
+const SF1=[
+ ['sRef','STR Ref.#','System-generated transfer requisition number','ro'],
+ ['sDate','STR Date','Date the transfer requisition is raised','date'],
+ ['sReqDt','Required Date','Date the stock is needed by','date'],
+ ['sPri','Priority','How urgent the transfer is','cb'],
+ ['sBy','Raised By','User raising the requisition','ro'],
+ ['sRem','Remarks','Any additional remarks','text']
+];
+const SF2=[
+ ['sCo','Company','Company requesting the stock','cb'],
+ ['sBu','Business Unit','Business unit under the company','cb'],
+ ['sPc','Profit Center','Profit center under the business unit','cb'],
+ ['sWh','Warehouse','Warehouse that will receive the stock','cb']
+];
+function sField(f){
+ const t=f[3];
+ const inp=t==='date'?`<input id='${f[0]}' type='date'>`:t==='ro'?`<input id='${f[0]}' readonly>`:t==='cb'?`<input id='${f[0]}' placeholder='-- Select --'>`:`<input id='${f[0]}' autocomplete='off'>`;
+ return `<div class='fld'><div class='pl'><label for='${f[0]}'>${f[1]}</label><span class='ii' role='img' aria-label='${f[2]}' title='${f[2]}'>i</span></div>${inp}</div>`;
+}
+$('sGrid1').innerHTML=SF1.map(sField).join('');
+$('sGrid2').innerHTML=SF2.map(sField).join('');
+const SCOLS=[['Line No.',72],['Item Category',160],['Item Name',200],['Item Code',120],['Specification',210],['UOM',80],['Current Stock',120],['Transfer Requirement Qty',170],['Remarks',220],['',44]];
+$('sHead').innerHTML=SCOLS.map(c=>`<th style='min-width:${c[1]}px'>${c[0]}</th>`).join('');
+function sOpts(k){
+ const keys=['co','bu','pc','wh'],src=k===3?WHS:LOCS.concat(WHS);
+ const sel=SF.slice(0,k).map(id=>$(id).value.trim().toLowerCase()),out=[];
+ src.forEach(r=>{if(sel.every((x,j)=>!x||r[keys[j]].toLowerCase()===x)){const v=r[keys[k]];if(v&&!out.includes(v))out.push(v)}});
+ return out;
+}
+SF.forEach((id,k)=>{
+ combo(id,{options:()=>sOpts(k)});
+ $(id).addEventListener('change',()=>{for(let j=k+1;j<4;j++){const e=$(SF[j]);if(e.value&&!sOpts(j).some(o=>o.toLowerCase()===e.value.toLowerCase()))e.value=''}});
+});
+combo('sPri',{options:()=>['Low','Medium','High','Urgent']});
+function sItems(n){const c=$('sc'+n).value;return [...new Set(ITEMS.filter(d=>d.status==='Active'&&(!c||d.cat===c)).map(d=>d.name))]}
+function sFind(n){const nm=$('sn'+n).value,c=$('sc'+n).value;return ITEMS.find(d=>d.name===nm&&(!c||d.cat===c))||null}
+function sFill(tr,it){
+ rq(tr,'.code').value=it?it.code:'';rq(tr,'.uom').value=it?it.uom:'';rq(tr,'.spec').value=it?it.spec:'';
+ rq(tr,'.soh').value=it?'0.00':'';
+}
+function sRenum(){[...$('sBody').children].forEach((tr,i)=>{rq(tr,'.ln').value=(i+1)*10})}
+function sAddRow(){
+ const n=++sRowSeq,tr=document.createElement('tr');
+ tr.dataset.n=n;
+ tr.innerHTML=`<td><input class='ln' readonly aria-label='Line No.'></td><td><input id='sc${n}' placeholder='-- Select --' aria-label='Item Category'></td><td><input id='sn${n}' placeholder='-- Select --' aria-label='Item Name'></td><td><input class='code' readonly aria-label='Item Code'></td><td><input class='spec' autocomplete='off' aria-label='Specification'></td><td><input class='uom' readonly aria-label='UOM'></td><td><input class='soh' readonly aria-label='Current Stock'></td><td><input class='qty' type='number' min='0' step='any' placeholder='0.00' aria-label='Transfer Requirement Qty'></td><td><input class='lrem' autocomplete='off' aria-label='Remarks'></td><td><button type='button' class='x' title='Remove line' aria-label='Remove line'>\u2715</button></td>`;
+ $('sBody').appendChild(tr);
+ combo('sc'+n,{options:()=>Object.keys(CATS)});
+ combo('sn'+n,{options:()=>sItems(n)});
+ $('sc'+n).addEventListener('change',()=>{const nm=$('sn'+n);if(nm.value&&!sItems(n).includes(nm.value)){nm.value='';sFill(tr,null)}});
+ $('sn'+n).addEventListener('change',()=>{const it=sFind(n);if(it&&!$('sc'+n).value)$('sc'+n).value=it.cat;sFill(tr,it)});
+ rq(tr,'.x').onclick=()=>{tr.remove();if(!$('sBody').children.length)sAddRow();sRenum()};
+ sRenum();
+}
+function sRenderLog(){$('sLog').innerHTML=sLog.slice().reverse().map(m=>`<div style='color:${m.ok?'#23925a':'#d64545'}'>${m.t}&nbsp;&nbsp;${esc(m.text)}</div>`).join('')}
+function sNote(text,ok){
+ $('sStatus').textContent=text;$('sStatus').className=ok?'ok':'';
+ sLog.push({t:new Date().toLocaleTimeString('en-US'),text,ok});
+ $('sShow').disabled=false;sRenderLog();
+}
+function sDirty(){
+ if(['sCo','sBu','sPc','sWh','sReqDt','sPri','sRem'].some(id=>$(id).value.trim()))return true;
+ return [...$('sBody').children].some(tr=>{const n=tr.dataset.n;return $('sn'+n).value||$('sc'+n).value||rq(tr,'.qty').value||rq(tr,'.lrem').value.trim()||rq(tr,'.spec').value.trim()});
+}
+function sLock(on){
+ $('strView').querySelectorAll('input,button.x').forEach(e=>e.disabled=on);
+ ['sAdd','sSave'].forEach(id=>$(id).hidden=on);
+}
+function sReset(){
+ sCur=null;
+ $('sRef').value='STR-'+String(strNo).padStart(6,'0');
+ $('sDate').value=today();
+ ['sCo','sBu','sPc','sWh','sReqDt','sPri','sRem'].forEach(id=>$(id).value='');
+ $('sBy').value=USER+', '+dt(new Date());
+ $('sBody').innerHTML='';sAddRow();
+ sLock(false);
+ $('sTitle').textContent='New stock transfer requisition';
+}
+function sOpen(i,print){
+ const p=STRS[i];
+ sReset();sCur=i;
+ $('sRef').value=p.ref;$('sDate').value=p.date;
+ [['sCo','co'],['sBu','bu'],['sPc','pc'],['sWh','wh'],['sReqDt','reqDate'],['sPri','pri'],['sRem','rem']].forEach(x=>$(x[0]).value=p[x[1]]||'');
+ $('sBy').value=p.by+', '+dt(new Date(p.at));
+ $('sBody').innerHTML='';
+ (p.lines.length?p.lines:[{}]).forEach(l=>{
+  sAddRow();const tr=$('sBody').lastElementChild,n=tr.dataset.n;
+  $('sc'+n).value=l.cat||'';$('sn'+n).value=l.name||'';
+  sFill(tr,sFind(n));
+  rq(tr,'.spec').value=l.spec||'';rq(tr,'.qty').value=l.qty||'';rq(tr,'.lrem').value=l.remarks||'';
+ });
+ sRenum();
+ $('sTitle').textContent=p.ref+' ('+p.mode+')';
+ sLock(p.mode==='Complete'||!mineDoc(p));apHint(p,'mode',sNote);
+ showPane('strView');
+ if(print)setTimeout(()=>{try{window.print()}catch(e){}},150);
+}
+function sSave(mode){
+ const v=id=>$(id).value.trim(),comp=mode==='Complete';
+ let err='';
+ if(comp){
+  const need=[['sDate','STR date'],['sReqDt','required date'],['sPri','priority'],['sCo','company'],['sBu','business unit'],['sPc','profit center'],['sWh','warehouse']];
+  for(const x of need){if(!v(x[0])){err='The '+x[1]+' is required to complete.';break}}
+  if(!err&&v('sReqDt')<v('sDate'))err='Required date cannot be before the STR date.';
+ }else if(!v('sCo'))err='Select the company to save a draft.';
+ const lines=[];
+ if(!err){
+  [...$('sBody').children].forEach((tr,i)=>{
+   if(err)return;
+   const n=tr.dataset.n,name=$('sn'+n).value,cat=$('sc'+n).value,qty=+rq(tr,'.qty').value,spec=rq(tr,'.spec').value.trim(),remarks=rq(tr,'.lrem').value.trim();
+   if(!name&&!cat&&!qty&&!spec&&!remarks)return;
+   if(comp&&(!name||!(qty>0))){err='Line '+((i+1)*10)+': select an item and enter the transfer requirement qty.';return}
+   lines.push({line:(i+1)*10,cat,name,code:rq(tr,'.code').value,uom:rq(tr,'.uom').value,spec,stock:rq(tr,'.soh').value,qty,remarks});
+  });
+  if(!err&&comp&&!lines.length)err='Add at least one item with a transfer requirement qty.';
+ }
+ if(err){sNote(err,false);return}
+ const rec={ref:v('sRef'),mode,date:v('sDate'),reqDate:v('sReqDt'),pri:v('sPri'),rem:v('sRem'),co:v('sCo'),bu:v('sBu'),pc:v('sPc'),wh:v('sWh'),by:sCur!==null?STRS[sCur].by:USER,at:sCur!==null?STRS[sCur].at:new Date().toISOString(),lines};
+ const sNew=sCur===null;
+ if(sCur!==null)STRS[sCur]=rec;else{STRS.push(rec);strNo++}
+ pushDoc('str',rec,sNew,rec.ref);
+ sReset();
+ $('slMode').value=mode;
+ sNote(rec.ref+' saved as '+mode+'.',true);
+ slNote(rec.ref+' saved as '+mode+'.');
+ slRender();showPane('strListView');
+}
+function slNote(t){const n=$('slNote');n.textContent=t;n.style.display=t?'block':'none'}
+function slRender(){
+ const q=$('slSearch').value.trim().toLowerCase(),mode=$('slMode').value||'Draft';
+ const rows=STRS.map((p,i)=>({p,i})).filter(x=>{
+  if(x.p.mode!==mode)return false;
+  const l=x.p.lines[0]||{};
+  return !q||[x.p.ref,x.p.co,l.name,l.code].join(' ').toLowerCase().includes(q);
+ });
+ $('slBody').innerHTML=rows.length?rows.map((x,k)=>{
+  const p=x.p,l=p.lines[0]||{},more=p.lines.length>1?` <span class='more'>+${p.lines.length-1} more</span>`:'';
+  const del=p.mode==='Draft'?`<button type='button' class='ab dl' data-a='del' data-i='${x.i}'>Delete</button>`:'';
+  return `<tr><td>${k+1}</td><td><b>${esc(p.ref)}</b></td><td>${p.date?new Date(p.date+'T00:00').toLocaleDateString('en-US'):''}</td><td>${esc(p.co)}</td><td>${esc(l.name||'')}${more}</td><td>${esc(l.code||'')}</td><td>${l.qty||''}</td><td>${esc(l.uom||'')}</td><td>${docBadge(p,'mode','pr')}</td><td>${esc(p.by)}<div class='more'>${dt(new Date(p.at))}</div></td><td class='acts'><button type='button' class='ab v' data-a='view' data-i='${x.i}'>View</button><button type='button' class='ab p' data-a='print' data-i='${x.i}' aria-label='Print'>Print</button>${trk(p)}${del}</td></tr>`;
+ }).join(''):`<tr><td colspan='11' class='empty'>No ${esc(mode.toLowerCase())} requisitions. Click Add Stock Transfer Requisition to create one.</td></tr>`;
+}
+$('slMode').addEventListener('change',()=>{slNote('');slRender()});
+$('slSearch').oninput=slRender;
+$('slAdd').onclick=()=>{slNote('');sReset();showPane('strView')};
+$('slPrint').onclick=()=>{try{window.print()}catch(e){slNote('Printing is not available here. Use your browser print option.')}};
+$('slClose').onclick=()=>nav.querySelector('.item[data-id=home] .sub a').click();
+$('slBody').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='view')sOpen(i);
+ else if(b.dataset.a==='print')sOpen(i,true);
+ else if(b.dataset.a==='track')openApDoc('str',STRS[i].ref);
+ else if(b.dataset.arm){pushDel('str',STRS[i].ref);STRS.splice(i,1);slNote('');slRender()}
+ else{b.dataset.arm=1;b.textContent='Confirm';setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000)}
+};
+$('sAdd').onclick=sAddRow;
+$('sSave').onclick=()=>sSave('Complete');
+$('sShow').onclick=()=>$('sLog').classList.toggle('on');
+$('sExit').onclick=()=>{
+ if(!sExitArm&&!$('sSave').hidden&&sDirty()){sExitArm=true;sNote('Unsaved changes will be lost. Click Exit again to leave.',false);setTimeout(()=>{sExitArm=false},4000);return}
+ sExitArm=false;sReset();slRender();showPane('strListView');
+};
+sReset();slRender();
+/* ---------- Store Requisition ---------- */
+const SRS=[],qLog=[];
+let srNo=1,qRowSeq=0,qCur=null,qExitArm=false;
+const QF=['qCo','qBu','qPc','qPl','qCc'];
+const QFIELDS=[
+ ['qRef','SR Ref.#','System-generated store requisition number','ro'],
+ ['qDate','Date','Date the store requisition is raised','date'],
+ ['qStat','Status','Current status of the requisition','ro'],
+ ['qCo','Company','Company raising the requisition','cb','-- Select Company --'],
+ ['qBu','Business Unit','Business unit under the company','cb','-- Select BU --'],
+ ['qPc','Profit Center','Profit center under the business unit','cb','-- Select Profit Center --'],
+ ['qPl','Plant','Plant under the profit center','cb','-- Select Plant --'],
+ ['qCc','Cost Center (Department)','Cost center (department) under the plant','cb','-- Select Cost Center --'],
+ ['qPri','Priority','How urgent the requisition is','cb','-- Select --'],
+ ['qBy','Raised By','User raising the requisition','ro'],
+ ['qRem','Remarks','Any additional remarks','text']
+];
+$('qGrid').innerHTML=QFIELDS.map(f=>{
+ const t=f[3];
+ const inp=t==='date'?`<input id='${f[0]}' type='date'>`:t==='ro'?`<input id='${f[0]}' readonly>`:t==='cb'?`<input id='${f[0]}' placeholder='${f[4]}'>`:`<input id='${f[0]}' autocomplete='off'>`;
+ return `<div class='fld'><div class='pl'><label for='${f[0]}'>${f[1]}</label><span class='ii' role='img' aria-label='${f[2]}' title='${f[2]}'>i</span></div>${inp}</div>`;
+}).join('');
+const QCOLS=[['Line No.',72],['Item Category',160],['Item Name',200],['Item Code',120],['Specification',210],['UOM',80],['Current Stock',120],['Transfer Requirement Qty',170],['Remarks',220],['',44]];
+$('qHead').innerHTML=QCOLS.map(c=>`<th style='min-width:${c[1]}px'>${c[0]}</th>`).join('');
+function qOpts(k){
+ const keys=['co','bu','pc','pl','cc'];
+ const sel=QF.slice(0,k).map(id=>$(id).value.trim().toLowerCase()),out=[];
+ LOCS.forEach(r=>{if(sel.every((x,j)=>!x||r[keys[j]].toLowerCase()===x)){const v=r[keys[k]];if(v&&!out.includes(v))out.push(v)}});
+ return out;
+}
+QF.forEach((id,k)=>{
+ combo(id,{options:()=>qOpts(k)});
+ $(id).addEventListener('change',()=>{for(let j=k+1;j<5;j++){const e=$(QF[j]);if(e.value&&!qOpts(j).some(o=>o.toLowerCase()===e.value.toLowerCase()))e.value=''}});
+});
+combo('qPri',{options:()=>['Low','Normal','High','Urgent'],fallback:'Normal'});
+function qItems(n){const c=$('qc'+n).value;return [...new Set(ITEMS.filter(d=>d.status==='Active'&&(!c||d.cat===c)).map(d=>d.name))]}
+function qFind(n){const nm=$('qn'+n).value,c=$('qc'+n).value;return ITEMS.find(d=>d.name===nm&&(!c||d.cat===c))||null}
+function qFill(tr,it){
+ rq(tr,'.code').value=it?it.code:'';rq(tr,'.uom').value=it?it.uom:'';rq(tr,'.spec').value=it?it.spec:'';
+ rq(tr,'.soh').value=it?'0.00':'';
+}
+function qRenum(){[...$('qBody').children].forEach((tr,i)=>{rq(tr,'.ln').value=(i+1)*10})}
+function qAddRow(){
+ const n=++qRowSeq,tr=document.createElement('tr');
+ tr.dataset.n=n;
+ tr.innerHTML=`<td><input class='ln' readonly aria-label='Line No.'></td><td><input id='qc${n}' placeholder='-- Select --' aria-label='Item Category'></td><td><input id='qn${n}' placeholder='-- Select --' aria-label='Item Name'></td><td><input class='code' readonly aria-label='Item Code'></td><td><input class='spec' autocomplete='off' aria-label='Specification'></td><td><input class='uom' readonly aria-label='UOM'></td><td><input class='soh' readonly aria-label='Current Stock'></td><td><input class='qty' type='number' min='0' step='any' placeholder='0.00' aria-label='Transfer Requirement Qty'></td><td><input class='lrem' autocomplete='off' aria-label='Remarks'></td><td><button type='button' class='x' title='Remove line' aria-label='Remove line'>✕</button></td>`;
+ $('qBody').appendChild(tr);
+ combo('qc'+n,{options:()=>Object.keys(CATS)});
+ combo('qn'+n,{options:()=>qItems(n)});
+ $('qc'+n).addEventListener('change',()=>{const nm=$('qn'+n);if(nm.value&&!qItems(n).includes(nm.value)){nm.value='';qFill(tr,null)}});
+ $('qn'+n).addEventListener('change',()=>{const it=qFind(n);if(it&&!$('qc'+n).value)$('qc'+n).value=it.cat;qFill(tr,it)});
+ rq(tr,'.x').onclick=()=>{tr.remove();if(!$('qBody').children.length)qAddRow();qRenum()};
+ qRenum();
+}
+function qRenderLog(){$('qLog').innerHTML=qLog.slice().reverse().map(m=>`<div style='color:${m.ok?'#23925a':'#d64545'}'>${m.t}&nbsp;&nbsp;${esc(m.text)}</div>`).join('')}
+function qNote(text,ok){
+ $('qStatus').textContent=text;$('qStatus').className=ok?'ok':'';
+ qLog.push({t:new Date().toLocaleTimeString('en-US'),text,ok});
+ $('qShow').disabled=false;qRenderLog();
+}
+function qDirty(){
+ if(['qCo','qBu','qPc','qPl','qCc','qRem'].some(id=>$(id).value.trim()))return true;
+ return [...$('qBody').children].some(tr=>{const n=tr.dataset.n;return $('qn'+n).value||$('qc'+n).value||rq(tr,'.qty').value||rq(tr,'.lrem').value.trim()||rq(tr,'.spec').value.trim()});
+}
+function qLock(on){
+ $('srView').querySelectorAll('input,button.x').forEach(e=>e.disabled=on);
+ ['qAdd','qSave','qModeBox'].forEach(id=>$(id).hidden=on);
+}
+function qReset(){
+ qCur=null;qLock(false);$('qMode').value='Draft';
+ $('qRef').value='SR-'+String(srNo).padStart(6,'0');
+ $('qDate').value=today();$('qStat').value='Draft';
+ ['qCo','qBu','qPc','qPl','qCc','qRem'].forEach(id=>$(id).value='');
+ $('qPri').value='Normal';
+ $('qBy').value=USER+', '+dt(new Date());
+ $('qBody').innerHTML='';qAddRow();
+ $('qTitle').textContent='New store requisition';
+}
+function qOpen(i,print){
+ const p=SRS[i];
+ qReset();qCur=i;
+ $('qRef').value=p.ref;$('qDate').value=p.date;$('qStat').value=p.status;
+ [['qCo','co'],['qBu','bu'],['qPc','pc'],['qPl','pl'],['qCc','cc'],['qPri','pri'],['qRem','rem']].forEach(x=>$(x[0]).value=p[x[1]]||'');
+ $('qBy').value=p.by+', '+dt(new Date(p.at));
+ $('qBody').innerHTML='';
+ (p.lines.length?p.lines:[{}]).forEach(l=>{
+  qAddRow();const tr=$('qBody').lastElementChild,n=tr.dataset.n;
+  $('qc'+n).value=l.cat||'';$('qn'+n).value=l.name||'';
+  qFill(tr,qFind(n));
+  rq(tr,'.spec').value=l.spec||'';rq(tr,'.qty').value=l.qty||'';rq(tr,'.lrem').value=l.remarks||'';
+ });
+ qRenum();
+ $('qTitle').textContent=p.ref+' ('+p.status+')';
+ qLock(p.status==='Complete'||!mineDoc(p));apHint(p,'status',qNote);
+ showPane('srView');
+ if(print)setTimeout(()=>{try{window.print()}catch(e){}},150);
+}
+function qSave(mode){
+ const v=id=>$(id).value.trim(),comp=mode==='Complete';
+ let err='';
+ if(comp){
+  const need=[['qDate','date'],['qCo','company'],['qBu','business unit'],['qPc','profit center'],['qPl','plant'],['qCc','cost center'],['qPri','priority']];
+  for(const x of need){if(!v(x[0])){err='The '+x[1]+' is required to complete.';break}}
+ }else if(!v('qCo'))err='Select the company to save a draft.';
+ const lines=[];
+ if(!err){
+  [...$('qBody').children].forEach((tr,i)=>{
+   if(err)return;
+   const n=tr.dataset.n,name=$('qn'+n).value,cat=$('qc'+n).value,qty=+rq(tr,'.qty').value,spec=rq(tr,'.spec').value.trim(),remarks=rq(tr,'.lrem').value.trim();
+   if(!name&&!cat&&!qty&&!spec&&!remarks)return;
+   if(comp&&(!name||!(qty>0))){err='Line '+((i+1)*10)+': select an item and enter the transfer requirement qty.';return}
+   lines.push({line:(i+1)*10,cat,name,code:rq(tr,'.code').value,uom:rq(tr,'.uom').value,spec,stock:rq(tr,'.soh').value,qty,remarks});
+  });
+  if(!err&&comp&&!lines.length)err='Add at least one item with a transfer requirement qty.';
+ }
+ if(err){qNote(err,false);return}
+ const rec={ref:v('qRef'),status:mode,date:v('qDate'),co:v('qCo'),bu:v('qBu'),pc:v('qPc'),pl:v('qPl'),cc:v('qCc'),pri:v('qPri'),rem:v('qRem'),by:qCur!==null?SRS[qCur].by:USER,at:qCur!==null?SRS[qCur].at:new Date().toISOString(),lines};
+ const qNew=qCur===null;
+ if(qCur!==null)SRS[qCur]=rec;else{SRS.push(rec);srNo++}
+ pushDoc('sr',rec,qNew,rec.ref);
+ qReset();
+ $('qlMode').value=mode;
+ qNote(rec.ref+' saved as '+mode+'.',true);
+ qlNote(rec.ref+' saved as '+mode+'.');
+ qlRender();showPane('srListView');
+}
+function qlNote(t){const n=$('qlNote');n.textContent=t;n.style.display=t?'block':'none'}
+function qlRender(){
+ const q=$('qlSearch').value.trim().toLowerCase(),mode=$('qlMode').value||'Draft';
+ const rows=SRS.map((p,i)=>({p,i})).filter(x=>{
+  if(x.p.status!==mode)return false;
+  const l=x.p.lines[0]||{};
+  return !q||[x.p.ref,x.p.co,x.p.cc,l.name,l.code].join(' ').toLowerCase().includes(q);
+ });
+ $('qlBody').innerHTML=rows.length?rows.map((x,k)=>{
+  const p=x.p,l=p.lines[0]||{},more=p.lines.length>1?` <span class='more'>+${p.lines.length-1} more</span>`:'';
+  return `<tr><td>${k+1}</td><td><b>${esc(p.ref)}</b></td><td>${p.date?new Date(p.date+'T00:00').toLocaleDateString('en-US'):''}</td><td>${esc(p.co)}</td><td>${esc(p.cc)}</td><td>${esc(l.name||'')}${more}</td><td>${esc(l.code||'')}</td><td>${l.qty||''}</td><td>${esc(l.uom||'')}</td><td>${docBadge(p,'status','sr')}</td><td>${esc(p.by)}<div class='more'>${dt(new Date(p.at))}</div></td><td class='acts'><button type='button' class='ab v' data-a='view' data-i='${x.i}'>View</button><button type='button' class='ab p' data-a='print' data-i='${x.i}' aria-label='Print'>Print</button>${trk(p)}${p.status==='Draft'?`<button type='button' class='ab dl' data-a='del' data-i='${x.i}'>Delete</button>`:''}</td></tr>`;
+ }).join(''):`<tr><td colspan='12' class='empty'>No ${esc(mode.toLowerCase())} store requisitions. Click Add Store Requisition to create one.</td></tr>`;
+}
+$('qlMode').addEventListener('change',()=>{qlNote('');qlRender()});
+$('qlSearch').oninput=qlRender;
+$('qlAdd').onclick=()=>{qlNote('');qReset();showPane('srView')};
+$('qlPrint').onclick=()=>{try{window.print()}catch(e){qlNote('Printing is not available here. Use your browser print option.')}};
+$('qlClose').onclick=()=>nav.querySelector('.item[data-id=home] .sub a').click();
+$('qlBody').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='view')qOpen(i);
+ else if(b.dataset.a==='print')qOpen(i,true);
+ else if(b.dataset.a==='track')openApDoc('sr',SRS[i].ref);
+ else if(b.dataset.arm){pushDel('sr',SRS[i].ref);SRS.splice(i,1);qlNote('');qlRender()}
+ else{b.dataset.arm=1;b.textContent='Confirm';setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000)}
+};
+$('qAdd').onclick=qAddRow;
+$('qSave').onclick=()=>qSave($('qMode').value||'Draft');
+$('qShow').onclick=()=>{const l=$('qLog');l.style.display=l.style.display==='block'?'none':'block'};
+$('qExit').onclick=()=>{
+ if(!qExitArm&&!$('qSave').hidden&&qDirty()){qExitArm=true;qNote('Unsaved changes will be lost. Click Exit again to leave.',false);setTimeout(()=>{qExitArm=false},4000);return}
+ qExitArm=false;qReset();qlRender();showPane('srListView');
+};
+qReset();qlRender();
+/* ---------- Goods Receive ---------- */
+const GRS=[];
+let grNo=1,gRowSeq=0,gCur=null,gType='Purchase';
+const GF=['gCo','gBu','gPc','gWh'];
+const GFIELDS=[
+ ['gPr','PR No','Purchase requisition number','text'],
+ ['gPo','PO No','Purchase order number','text'],
+ ['gGrn','GRN No','System-generated goods receive note number','ro'],
+ ['gCo','Company','Company receiving the goods','cb'],
+ ['gBu','Business Unit','Business unit under the company','cb'],
+ ['gPc','Profit Center','Profit center under the business unit','cb'],
+ ['gWh','Warehouse','Warehouse that receives the goods','cb'],
+ ['gBy','Raised By','User raising the receive','ro'],
+ ['gRem','Remarks','Any additional remarks','text']
+];
+$('gGrid').innerHTML=GFIELDS.map(f=>{
+ const t=f[3];
+ const inp=t==='ro'?`<input id='${f[0]}' readonly>`:t==='cb'?`<input id='${f[0]}' placeholder='-- Select --'>`:`<input id='${f[0]}' autocomplete='off'>`;
+ return `<div class='fld'><div class='pl'><label for='${f[0]}'>${f[1]}</label><span class='ii' role='img' aria-label='${f[2]}' title='${f[2]}'>i</span></div>${inp}</div>`;
+}).join('');
+const GCOLS=[['Line No.',72],['Item Category',160],['Item Name',200],['Item Code',120],['Specification',210],['UOM',80],['Current Stock',120],['Received Qty',120],['Rate',110],['Amount',120],['Remarks',200],['',44]];
+$('gHead').innerHTML=GCOLS.map(c=>`<th style='min-width:${c[1]}px'>${c[0]}</th>`).join('');
+function gOpts(k){
+ const keys=['co','bu','pc','wh'],src=k===3?WHS:LOCS.concat(WHS);
+ const sel=GF.slice(0,k).map(id=>$(id).value.trim().toLowerCase()),out=[];
+ src.forEach(r=>{if(sel.every((x,j)=>!x||r[keys[j]].toLowerCase()===x)){const v=r[keys[k]];if(v&&!out.includes(v))out.push(v)}});
+ return out;
+}
+GF.forEach((id,k)=>{
+ combo(id,{options:()=>gOpts(k)});
+ $(id).addEventListener('change',()=>{for(let j=k+1;j<4;j++){const e=$(GF[j]);if(e.value&&!gOpts(j).some(o=>o.toLowerCase()===e.value.toLowerCase()))e.value=''}});
+});
+function gItems(n){const c=$('gc'+n).value;return [...new Set(ITEMS.filter(d=>d.status==='Active'&&(!c||d.cat===c)).map(d=>d.name))]}
+function gFind(n){const nm=$('gn'+n).value,c=$('gc'+n).value;return ITEMS.find(d=>d.name===nm&&(!c||d.cat===c))||null}
+function gFill(tr,it){
+ rq(tr,'.code').value=it?it.code:'';rq(tr,'.uom').value=it?it.uom:'';rq(tr,'.spec').value=it?it.spec:'';
+ rq(tr,'.soh').value=it?'0.00':'';
+}
+function gTotals(){
+ let gt=0;
+ [...$('gBody').children].forEach((tr,i)=>{
+  rq(tr,'.ln').value=(i+1)*10;
+  const t=(+rq(tr,'.qty').value||0)*(+rq(tr,'.prc').value||0);
+  rq(tr,'.tot').value=fmt(t);gt+=t;
+ });
+ $('gGt').textContent=fmt(gt);
+}
+function gAddRow(){
+ const n=++gRowSeq,tr=document.createElement('tr');
+ tr.dataset.n=n;
+ tr.innerHTML=`<td><input class='ln' readonly aria-label='Line No.'></td><td><input id='gc${n}' placeholder='-- Search / Select --' aria-label='Item Category'></td><td><input id='gn${n}' placeholder='-- Search / Select --' aria-label='Item Name'></td><td><input class='code' readonly aria-label='Item Code'></td><td><input class='spec' autocomplete='off' aria-label='Specification'></td><td><input class='uom' readonly aria-label='UOM'></td><td><input class='soh' readonly aria-label='Current Stock'></td><td><input class='qty' type='number' min='0' step='any' placeholder='0.00' aria-label='Received Qty'></td><td><input class='prc' type='number' min='0' step='any' placeholder='0.00' aria-label='Rate'></td><td><input class='tot' readonly aria-label='Amount'></td><td><input class='lrem' autocomplete='off' aria-label='Remarks'></td><td><button type='button' class='x' title='Remove line' aria-label='Remove line'>✕</button></td>`;
+ $('gBody').appendChild(tr);
+ combo('gc'+n,{options:()=>Object.keys(CATS)});
+ combo('gn'+n,{options:()=>gItems(n)});
+ $('gc'+n).addEventListener('change',()=>{const nm=$('gn'+n);if(nm.value&&!gItems(n).includes(nm.value)){nm.value='';gFill(tr,null)}});
+ $('gn'+n).addEventListener('change',()=>{const it=gFind(n);if(it&&!$('gc'+n).value)$('gc'+n).value=it.cat;gFill(tr,it)});
+ tr.addEventListener('input',e=>{if(e.target.matches('.qty,.prc'))gTotals()});
+ rq(tr,'.x').onclick=()=>{tr.remove();if(!$('gBody').children.length)gAddRow();gTotals()};
+ gTotals();
+}
+function gNote(t,ok){$('gStatus').textContent=t;$('gStatus').className=ok?'ok':''}
+function gReset(){
+ gCur=null;
+ $('gGrn').value='GRN-'+String(grNo).padStart(6,'0');
+ const gEd=gType==='Purchase';
+ $('gGrn').readOnly=!gEd;$('gGrn').autocomplete='off';
+ $('gGrn').title=gEd?'Editable for Purchase receive. Default is system-generated.':'System-generated goods receive note number';
+ ['gPr','gPo','gCo','gBu','gPc','gWh','gRem'].forEach(id=>$(id).value='');
+ $('gBy').value=USER+', '+dt(new Date());
+ $('gBody').innerHTML='';gAddRow();
+ $('gTitle').textContent='New goods receive ('+gType+')';
+}
+function gTab(type){
+ gType=type;
+ $('gtP').setAttribute('aria-selected',type==='Purchase');
+ $('gtT').setAttribute('aria-selected',type==='Transfer');
+ $('gListTitle').textContent=type+' receive list';
+ gReset();gNote('');gRender();
+}
+function gEdit(i){
+ const p=GRS[i];
+ gType=p.type;gTab(p.type);gCur=i;
+ $('gGrn').value=p.grn;$('gPr').value=p.pr;$('gPo').value=p.po;
+ [['gCo','co'],['gBu','bu'],['gPc','pc'],['gWh','wh'],['gRem','rem']].forEach(x=>$(x[0]).value=p[x[1]]||'');
+ $('gBy').value=p.by+', '+dt(new Date(p.at));
+ $('gBody').innerHTML='';
+ p.lines.forEach(l=>{
+  gAddRow();const tr=$('gBody').lastElementChild,n=tr.dataset.n;
+  $('gc'+n).value=l.cat||'';$('gn'+n).value=l.name||'';
+  gFill(tr,gFind(n));
+  rq(tr,'.spec').value=l.spec||'';rq(tr,'.qty').value=l.qty||'';rq(tr,'.prc').value=l.rate||'';rq(tr,'.lrem').value=l.remarks||'';
+ });
+ gTotals();
+ $('gTitle').textContent=p.grn+' ('+p.type+')';
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function gSave(){
+ const v=id=>$(id).value.trim();
+ let err='';
+ if(!v('gGrn'))err='Enter the GRN No.';
+ else if(GRS.some((r,i)=>i!==gCur&&r.grn.toLowerCase()===v('gGrn').toLowerCase()))err='This GRN No already exists.';
+ if(!err)for(const x of [['gCo','company'],['gBu','business unit'],['gPc','profit center'],['gWh','warehouse']]){if(!v(x[0])){err='Select the '+x[1]+'.';break}}
+ const lines=[];
+ if(!err){
+  [...$('gBody').children].forEach((tr,i)=>{
+   if(err)return;
+   const n=tr.dataset.n,name=$('gn'+n).value,cat=$('gc'+n).value,qty=+rq(tr,'.qty').value,rate=+rq(tr,'.prc').value,spec=rq(tr,'.spec').value.trim(),remarks=rq(tr,'.lrem').value.trim();
+   if(!name&&!cat&&!qty&&!rate&&!spec&&!remarks)return;
+   if(!name||!(qty>0)){err='Line '+((i+1)*10)+': select an item and enter the received qty.';return}
+   lines.push({line:(i+1)*10,cat,name,code:rq(tr,'.code').value,uom:rq(tr,'.uom').value,spec,qty,rate,amount:qty*rate,remarks});
+  });
+  if(!err&&!lines.length)err='Add at least one item with a received qty.';
+ }
+ if(err){gNote(err,false);return}
+ const rec={type:gType,grn:v('gGrn'),pr:v('gPr'),po:v('gPo'),co:v('gCo'),bu:v('gBu'),pc:v('gPc'),wh:v('gWh'),rem:v('gRem'),by:gCur!==null?GRS[gCur].by:USER,at:gCur!==null?GRS[gCur].at:new Date().toISOString(),lines,total:lines.reduce((s,l)=>s+l.amount,0)};
+ const gNew=gCur===null,gOrig=gCur!==null?GRS[gCur].grn:'';
+ if(gCur!==null)GRS[gCur]=rec;else{GRS.push(rec);grNo++}
+ pushDoc('grn',rec,gNew,gOrig);
+ gReset();gRender();
+ gNote(rec.grn+' saved. Total '+fmt(rec.total)+'.',true);
+}
+function gRender(){
+ const q=$('gSearch').value.trim().toLowerCase();
+ const rows=GRS.map((p,i)=>({p,i})).filter(x=>x.p.type===gType&&(!q||[x.p.grn,x.p.pr,x.p.po,x.p.co,x.p.lines.map(l=>l.name+' '+l.code).join(' ')].join(' ').toLowerCase().includes(q)));
+ $('gBodyList').innerHTML=rows.length?rows.map((x,k)=>{
+  const p=x.p;
+  return `<tr><td>${k+1}</td><td><b>${esc(p.grn)}</b></td><td>${esc(p.pr)}</td><td>${esc(p.po)}</td><td>${esc(p.co)}</td><td>${esc(p.wh)}</td><td>${p.lines.length}</td><td class='n'>${fmt(p.total)}</td><td>${esc(p.by)}<div class='more'>${dt(new Date(p.at))}</div></td><td class='acts'><button type='button' class='ab v' data-a='edit' data-i='${x.i}'>Edit</button><button type='button' class='ab dl' data-a='del' data-i='${x.i}'>Delete</button></td></tr>`;
+ }).join(''):`<tr><td colspan='10' class='empty'>No ${gType.toLowerCase()} receives saved yet.</td></tr>`;
+}
+$('gtP').onclick=()=>gTab('Purchase');
+$('gtT').onclick=()=>gTab('Transfer');
+$('gAdd').onclick=gAddRow;
+$('gSave').onclick=gSave;
+$('gClear').onclick=()=>{gReset();gNote('')};
+$('gSearch').oninput=gRender;
+$('gBodyList').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='edit')gEdit(i);
+ else if(b.dataset.arm){pushDel('grn',GRS[i].grn);GRS.splice(i,1);if(gCur===i)gReset();else if(gCur!==null&&i<gCur)gCur--;gRender()}
+ else{b.dataset.arm=1;b.textContent='Confirm';setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000)}
+};
+gReset();gRender();
+/* ---------- Goods Issue ---------- */
+const GIS=[],IRS=[],giLogA=[];
+let giNo=1,giCur=null,giType='Consumption',giExitArm=false;
+const GIFIELDS=[
+ ['isRef','SR Ref.#','Linked requisition the goods are issued against','cb','-- Select SR --'],
+ ['isDate','Issue Date','Date the goods are issued','date'],
+ ['isBy','Issued By','User issuing the goods','ro'],
+ ['isCo','Company','Company from the linked requisition','au'],
+ ['isBu','Business Unit','Business unit from the linked requisition','au'],
+ ['isPc','Profit Center','Profit center from the linked requisition','au'],
+ ['isCc','Cost Center','Cost center from the linked requisition','au','','C'],
+ ['isPl','Plant','Plant from the linked requisition','au','','C'],
+ ['isWh','Issue From Warehouse','Warehouse the goods are issued from','cb','-- Select Warehouse --'],
+ ['isTo','Transfer To Warehouse','Warehouse that requested the transfer','au','','T'],
+ ['isDp','Department','Department from the linked requisition','au','','C'],
+ ['isPri','Priority','Priority from the linked requisition','au']
+];
+$('giGrid').innerHTML=GIFIELDS.map(f=>{
+ const t=f[3],only=f[5]?` data-only='${f[5]}'`:'';
+ const inp=t==='date'?`<input id='${f[0]}' type='date'>`:t==='ro'?`<input id='${f[0]}' readonly>`:t==='au'?`<input id='${f[0]}' readonly placeholder='Auto-filled'>`:`<input id='${f[0]}' placeholder='${f[4]}'>`;
+ return `<div class='fld'${only}><div class='pl'><label for='${f[0]}' id='${f[0]}L'>${f[1]}</label><span class='ii' role='img' aria-label='${f[2]}' title='${f[2]}'>i</span></div>${inp}</div>`;
+}).join('');
+const GIAUTO=['isCo','isBu','isPc','isCc','isPl','isDp','isPri','isTo'];
+const AP_T={pr:'PR',str:'STR',sr:'SR'},AP_DK={pr:'mode',str:'mode',sr:'status'};
+const dirName=uid=>{const x=DIR.find(d=>String(d.uid).toLowerCase()===String(uid).toLowerCase());return x?x.name:uid};
+const mineDoc=p=>backend()==='none'||!p.byUid||!Auth.user||p.byUid.toLowerCase()===Auth.user.uid.toLowerCase()||Auth.user.role==='Admin';
+const lastRej=(t,ref)=>APPR.filter(a=>a.type===t&&a.ref===ref&&a.action==='Rejected').pop();
+function docState(p,mk){
+ if(p[mk]!=='Complete')return p.apSt==='Rejected'?'Rejected':'Draft';
+ if(p.apSt==='Pending L1')return 'Waiting: '+dirName(p.ap1)+(p.ap2?' (1/2)':'');
+ if(p.apSt==='Pending L2')return 'Waiting: '+dirName(p.ap2)+' (2/2)';
+ return p.apSt==='Approved'?'Approved':'Complete';
+}
+function docBadge(p,mk,ent){
+ const st=docState(p,mk),cls=st==='Rejected'?'r':st.startsWith('Waiting')?'w':st==='Draft'?'d':'c';
+ let h=`<span class='st ${cls}'>${esc(st.toUpperCase())}</span>`;
+ if(st==='Rejected'){const r=lastRej(AP_T[ent],p.ref);if(r)h+=`<div class='more'>${esc(r.name)}: ${esc(r.note)}</div>`}
+ return h;
+}
+const trk=p=>p.apSt?`<button type='button' class='ab v' data-a='track'>Approval</button>`:'';
+function apHint(p,mk,note){
+ const ent=p===undefined?'':'';
+ if(!p.apSt)return;
+ const st=docState(p,mk);
+ if(st==='Rejected'){const r=APPR.filter(a=>a.ref===p.ref&&a.action==='Rejected').pop();note('Rejected'+(r?' by '+r.name+': '+r.note:'')+'. Edit and complete it again to resubmit.')}
+ else if(st.startsWith('Waiting'))note(st+'. It is locked until a decision is made.');
+}
+const apOk=r=>!r.apSt||r.apSt==='Approved';     // a requisition can only be issued against once it is approved
+function giSrcList(){return giType==='Consumption'?SRS.filter(r=>r.status==='Complete'&&apOk(r)):STRS.filter(r=>r.mode==='Complete'&&apOk(r))}
+function giSrcOpts(){
+ const used=GIS.filter((g,i)=>g.type===giType&&g.mode==='Submitted'&&i!==giCur).map(g=>g.ref);
+ return giSrcList().map(r=>r.ref).filter(x=>!used.includes(x));
+}
+combo('isRef',{options:giSrcOpts,empty:()=>'No completed requisitions available'});
+combo('isWh',{options:()=>[...new Set(WHS.map(w=>w.wh))]});
+function giStock(code,wh){
+ if(!code||!wh)return 0;
+ let s=0;
+ GRS.forEach(r=>{if(r.wh===wh)r.lines.forEach(l=>{if(l.code===code)s+=+l.qty||0})});
+ GIS.forEach((r,i)=>{if(r.mode==='Submitted'&&r.wh===wh)r.lines.forEach(l=>{if(l.code===code)s-=+l.qty||0})});
+ IRS.forEach(r=>{if(r.mode==='Submitted'&&r.wh===wh)r.lines.forEach(l=>{if(l.code===code)s+=+l.qty||0})});
+ return s;
+}
+function giHeadRender(){
+ const rl=giType==='Consumption'?'SR':'STR';
+ const cols=[['Line#',72],['Material Group',160],['Material Name',200],['Code',120],['UOM',80],['Stock',110],[rl+' Qty',110],['Issue Qty',120],['Specification',210],['Remarks',220]];
+ $('giHead').innerHTML=cols.map(c=>`<th style='min-width:${c[1]}px'>${c[0]}</th>`).join('');
+}
+function giStockRefresh(){
+ const wh=$('isWh').value.trim();
+ [...$('giBody').querySelectorAll('tr[data-code]')].forEach(tr=>{rq(tr,'.soh').value=wh?fmt(giStock(tr.dataset.code,wh)):''});
+}
+function giCount(){$('giItemsT').textContent='Issue Items ('+$('giBody').querySelectorAll('tr[data-code]').length+')'}
+function giRows(lines){
+ const rl=giType==='Consumption'?'SR':'STR';
+ $('giBody').innerHTML=lines.length?lines.map(l=>`<tr data-code="${esc(l.code||'')}"><td><input class='ln' readonly aria-label='Line#' value="${esc(l.line||'')}"></td><td><input class='cat' readonly aria-label='Material Group' value="${esc(l.cat||'')}"></td><td><input class='nm' readonly aria-label='Material Name' value="${esc(l.name||'')}"></td><td><input class='code' readonly aria-label='Code' value="${esc(l.code||'')}"></td><td><input class='uom' readonly aria-label='UOM' value="${esc(l.uom||'')}"></td><td><input class='soh' readonly aria-label='Stock'></td><td><input class='rqty' readonly aria-label='${rl} Qty' value="${l.reqQty!==undefined&&l.reqQty!==''?fmt(l.reqQty):''}" data-v="${+l.reqQty||0}"></td><td><input class='qty' type='number' min='0' step='any' placeholder='0.00' aria-label='Issue Qty' value="${l.qty?l.qty:''}"></td><td><input class='spec' readonly aria-label='Specification' value="${esc(l.spec||'')}"></td><td><input class='lrem' autocomplete='off' aria-label='Remarks' value="${esc(l.remarks||'')}"></td></tr>`).join(''):`<tr><td colspan='10' class='empty'>Select an ${rl} Ref.# to load items.</td></tr>`;
+ giStockRefresh();giCount();
+}
+function giFill(ref){
+ const r=giSrcList().find(x=>x.ref===ref);
+ GIAUTO.forEach(id=>$(id).value='');
+ if(!r){giRows([]);return}
+ $('isCo').value=r.co||'';$('isBu').value=r.bu||'';$('isPc').value=r.pc||'';$('isPri').value=r.pri||'';
+ if(giType==='Consumption'){$('isCc').value=r.cc||'';$('isPl').value=r.pl||'';$('isDp').value=r.cc||''}
+ else $('isTo').value=r.wh||'';
+ giRows(r.lines.filter(l=>l.name).map(l=>({line:l.line,cat:l.cat,name:l.name,code:l.code,uom:l.uom,spec:l.spec,reqQty:l.qty,qty:'',remarks:''})));
+}
+$('isRef').addEventListener('change',()=>giFill($('isRef').value.trim()));
+$('isWh').addEventListener('change',giStockRefresh);
+function giNote(text,ok){
+ $('giStatus').textContent=text;$('giStatus').className=ok?'ok':'';
+ if(!text)return;
+ giLogA.push({t:new Date().toLocaleTimeString('en-US'),text,ok});
+ $('giShow').disabled=false;
+ $('giLog').innerHTML=giLogA.slice().reverse().map(m=>`<div style='color:${m.ok?'#23925a':'#d64545'}'>${m.t}&nbsp;&nbsp;${esc(m.text)}</div>`).join('');
+}
+function giLock(on){
+ $('giFormCard').querySelectorAll('input').forEach(e=>e.disabled=on);
+ $('giSave').hidden=on;$('giSubmit').hidden=on;
+}
+function giDirty(){
+ if($('isRef').value.trim()||$('isWh').value.trim())return true;
+ return [...$('giBody').querySelectorAll('tr[data-code]')].some(tr=>rq(tr,'.qty').value||rq(tr,'.lrem').value.trim());
+}
+function giReset(){
+ giCur=null;giLock(false);
+ ['isRef','isWh'].forEach(id=>$(id).value='');
+ GIAUTO.forEach(id=>$(id).value='');
+ $('isDate').value=today();
+ $('isBy').value=USER+', '+dt(new Date());
+ giRows([]);
+ $('giTitle').textContent='New goods issue ('+giType+')';
+}
+function giTab(type){
+ giType=type;
+ $('giTabC').setAttribute('aria-selected',type==='Consumption');
+ $('giTabT').setAttribute('aria-selected',type==='Transfer');
+ const rl=type==='Consumption'?'SR':'STR';
+ $('isRefL').textContent=rl+' Ref.#';
+ $('isRef').placeholder='-- Select '+rl+' --';
+ $('giRefTh').textContent=rl+' Ref#';
+ $('giBanner').innerHTML='Items auto-populated from the linked '+rl+' &mdash; set <b>Issue Qty</b> and <b>Remarks</b> per row';
+ $('giListTitle').textContent=type+' issue list';
+ $('giSearch').placeholder='Search GI No, '+rl+' Ref#, Company, Item';
+ $('giGrid').querySelectorAll('.fld[data-only]').forEach(f=>{f.hidden=f.dataset.only!==(type==='Consumption'?'C':'T')});
+ giHeadRender();giReset();giNote('');giRender();
+}
+function giOpen(i){
+ const p=GIS[i];
+ giTab(p.type);giCur=i;
+ $('isRef').value=p.ref;$('isDate').value=p.date;$('isWh').value=p.wh;
+ [['isCo','co'],['isBu','bu'],['isPc','pc'],['isCc','cc'],['isPl','pl'],['isDp','dp'],['isPri','pri'],['isTo','to']].forEach(x=>$(x[0]).value=p[x[1]]||'');
+ $('isBy').value=p.by+', '+dt(new Date(p.at));
+ giRows(p.lines);
+ $('giTitle').textContent=p.no+' ('+p.type+', '+p.mode+')';
+ giLock(p.mode==='Submitted');
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function giSave(mode){
+ const v=id=>$(id).value.trim(),sub=mode==='Submitted',rl=giType==='Consumption'?'SR':'STR',wh=v('isWh');
+ let err='';
+ if(!v('isRef'))err='Select the '+rl+' Ref.#.';
+ else if(sub&&!v('isDate'))err='Enter the issue date.';
+ else if(sub&&!wh)err='Select the issue from warehouse.';
+ else if(sub&&giType==='Transfer'&&wh.toLowerCase()===v('isTo').toLowerCase())err='Issue from warehouse and transfer to warehouse cannot be the same.';
+ const lines=[];let any=false;
+ if(!err){
+  [...$('giBody').querySelectorAll('tr[data-code]')].forEach(tr=>{
+   if(err)return;
+   const ln=rq(tr,'.ln').value,qty=+rq(tr,'.qty').value||0,req=+rq(tr,'.rqty').dataset.v||0;
+   if(qty<0){err='Line '+ln+': issue qty cannot be negative.';return}
+   if(sub&&qty>0){
+    if(qty>req){err='Line '+ln+': issue qty cannot exceed the '+rl+' qty ('+fmt(req)+').';return}
+    const st=giStock(tr.dataset.code,wh);
+    if(qty>st){err='Line '+ln+': issue qty exceeds stock on hand ('+fmt(st)+').';return}
+    any=true;
+   }
+   lines.push({line:ln,cat:rq(tr,'.cat').value,name:rq(tr,'.nm').value,code:rq(tr,'.code').value,uom:rq(tr,'.uom').value,spec:rq(tr,'.spec').value,reqQty:req,qty,remarks:rq(tr,'.lrem').value.trim()});
+  });
+  if(!err&&sub&&!any)err='Enter an issue qty for at least one item.';
+  if(!err&&!lines.length)err='No items to issue. Select a '+rl+' Ref.# first.';
+ }
+ if(err){giNote(err,false);return}
+ const rec={type:giType,no:giCur!==null?GIS[giCur].no:'GI-'+String(giNo).padStart(6,'0'),ref:v('isRef'),mode,date:v('isDate'),co:v('isCo'),bu:v('isBu'),pc:v('isPc'),cc:v('isCc'),pl:v('isPl'),dp:v('isDp'),pri:v('isPri'),to:v('isTo'),wh,by:giCur!==null?GIS[giCur].by:USER,at:giCur!==null?GIS[giCur].at:new Date().toISOString(),lines};
+ const giNew=giCur===null;
+ if(giCur!==null)GIS[giCur]=rec;else{GIS.push(rec);giNo++}
+ pushDoc('gi',rec,giNew,rec.no);
+ giReset();giRender();
+ giNote(rec.no+' ('+rec.ref+') saved as '+mode+'.',true);
+}
+function giRender(){
+ const q=$('giSearch').value.trim().toLowerCase();
+ const rows=GIS.map((p,i)=>({p,i})).filter(x=>x.p.type===giType&&(!q||[x.p.no,x.p.ref,x.p.co,x.p.lines.map(l=>l.name+' '+l.code).join(' ')].join(' ').toLowerCase().includes(q)));
+ $('giList').innerHTML=rows.length?rows.map((x,k)=>{
+  const p=x.p,sub=p.mode==='Submitted';
+  return `<tr><td>${k+1}</td><td><b>${esc(p.no)}</b></td><td>${esc(p.ref)}</td><td>${p.date?new Date(p.date+'T00:00').toLocaleDateString('en-US'):''}</td><td>${esc(p.co)}</td><td>${esc(p.wh)}</td><td>${p.lines.length}</td><td><span class='st ${sub?'c':'d'}'>${p.mode.toUpperCase()}</span></td><td>${esc(p.by)}<div class='more'>${dt(new Date(p.at))}</div></td><td class='acts'><button type='button' class='ab v' data-a='open' data-i='${x.i}'>${sub?'View':'Edit'}</button>${sub?'':`<button type='button' class='ab dl' data-a='del' data-i='${x.i}'>Delete</button>`}</td></tr>`;
+ }).join(''):`<tr><td colspan='10' class='empty'>No ${giType.toLowerCase()} issues saved yet.</td></tr>`;
+}
+$('giTabC').onclick=()=>giTab('Consumption');
+$('giTabT').onclick=()=>giTab('Transfer');
+$('giSave').onclick=()=>giSave('Draft');
+$('giSubmit').onclick=()=>giSave('Submitted');
+$('giShow').onclick=()=>$('giLog').classList.toggle('on');
+$('giSearch').oninput=giRender;
+$('giTgl').onclick=()=>{
+ const w=$('giItemsWrap');w.hidden=!w.hidden;
+ $('giTgl').innerHTML=w.hidden?'+':'&minus;';
+ $('giTgl').setAttribute('aria-expanded',String(!w.hidden));
+};
+$('giExit').onclick=()=>{
+ if(!giExitArm&&!$('giSave').hidden&&giDirty()){giExitArm=true;giNote('Unsaved changes will be lost. Click Exit again to leave.',false);setTimeout(()=>{giExitArm=false},4000);return}
+ giExitArm=false;giReset();giNote('');
+};
+$('giList').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='open')giOpen(i);
+ else if(b.dataset.arm){pushDel('gi',GIS[i].no);GIS.splice(i,1);if(giCur===i)giReset();else if(giCur!==null&&i<giCur)giCur--;giRender()}
+ else{b.dataset.arm=1;b.textContent='Confirm';setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000)}
+};
+giTab('Consumption');
+/* ---------- Issue Return ---------- */
+const irLogA=[];
+let irNo=1,irCur=null,irType='Consumption',irExitArm=false;
+const IRFIELDS=[
+ ['irRef','GI Ref.#','Submitted goods issue the items are returned against','cb','-- Select GI --'],
+ ['irDate','Return Date','Date the items are returned','date'],
+ ['irBy','Returned By','User returning the items','ro'],
+ ['irCo','Company','Company from the linked goods issue','au'],
+ ['irBu','Business Unit','Business unit from the linked goods issue','au'],
+ ['irPc','Profit Center','Profit center from the linked goods issue','au'],
+ ['irCc','Cost Center','Cost center from the linked goods issue','au','','C'],
+ ['irPl','Plant','Plant from the linked goods issue','au','','C'],
+ ['irWh','Return To Warehouse','Warehouse the goods were issued from; the returned stock goes back here','au'],
+ ['irTo','Transferred To Warehouse','Warehouse the transfer was issued to','au','','T'],
+ ['irDp','Department','Department from the linked goods issue','au','','C'],
+ ['irPri','Priority','Priority from the linked goods issue','au']
+];
+$('irGrid').innerHTML=IRFIELDS.map(f=>{
+ const t=f[3],only=f[5]?` data-only='${f[5]}'`:'';
+ const inp=t==='date'?`<input id='${f[0]}' type='date'>`:t==='ro'?`<input id='${f[0]}' readonly>`:t==='au'?`<input id='${f[0]}' readonly placeholder='Auto-filled'>`:`<input id='${f[0]}' placeholder='${f[4]}'>`;
+ return `<div class='fld'${only}><div class='pl'><label for='${f[0]}'>${f[1]}</label><span class='ii' role='img' aria-label='${f[2]}' title='${f[2]}'>i</span></div>${inp}</div>`;
+}).join('');
+const IRAUTO=['irCo','irBu','irPc','irCc','irPl','irWh','irTo','irDp','irPri'];
+function irReturned(no,line,skip){
+ let s=0;
+ IRS.forEach((r,i)=>{if(i!==skip&&r.mode==='Submitted'&&r.gi===no)r.lines.forEach(l=>{if(String(l.line)===String(line))s+=+l.qty||0})});
+ return s;
+}
+function irGiList(){return GIS.filter(g=>g.type===irType&&g.mode==='Submitted')}
+function irGiOpts(){
+ return irGiList().filter(g=>g.lines.some(l=>(+l.qty||0)>irReturned(g.no,l.line,irCur===null?-1:irCur))).map(g=>g.no);
+}
+combo('irRef',{options:irGiOpts,empty:()=>'No submitted goods issues available'});
+function irHeadRender(){
+ const cols=[['Line#',72],['Material Group',160],['Material Name',200],['Code',120],['UOM',80],['Issued Qty',110],['Returned Qty',120],['Return Qty',120],['Specification',210],['Remarks',220]];
+ $('irHead').innerHTML=cols.map(c=>`<th style='min-width:${c[1]}px'>${c[0]}</th>`).join('');
+}
+function irCount(){$('irItemsT').textContent='Return Items ('+$('irBody').querySelectorAll('tr[data-code]').length+')'}
+function irRows(lines){
+ $('irBody').innerHTML=lines.length?lines.map(l=>`<tr data-code="${esc(l.code||'')}"><td><input class='ln' readonly aria-label='Line#' value="${esc(l.line||'')}"></td><td><input class='cat' readonly aria-label='Material Group' value="${esc(l.cat||'')}"></td><td><input class='nm' readonly aria-label='Material Name' value="${esc(l.name||'')}"></td><td><input class='code' readonly aria-label='Code' value="${esc(l.code||'')}"></td><td><input class='uom' readonly aria-label='UOM' value="${esc(l.uom||'')}"></td><td><input class='iss' readonly aria-label='Issued Qty' value="${fmt(l.issQty)}" data-v="${+l.issQty||0}"></td><td><input class='ret' readonly aria-label='Returned Qty' value="${fmt(l.ret)}" data-v="${+l.ret||0}"></td><td><input class='qty' type='number' min='0' step='any' placeholder='0.00' aria-label='Return Qty' value="${l.qty?l.qty:''}"></td><td><input class='spec' readonly aria-label='Specification' value="${esc(l.spec||'')}"></td><td><input class='lrem' autocomplete='off' aria-label='Remarks' value="${esc(l.remarks||'')}"></td></tr>`).join(''):`<tr><td colspan='10' class='empty'>Select a GI Ref.# to load items.</td></tr>`;
+ irCount();
+}
+function irFill(no){
+ const g=irGiList().find(x=>x.no===no);
+ IRAUTO.forEach(id=>$(id).value='');
+ if(!g){irRows([]);return}
+ [['irCo','co'],['irBu','bu'],['irPc','pc'],['irCc','cc'],['irPl','pl'],['irWh','wh'],['irTo','to'],['irDp','dp'],['irPri','pri']].forEach(x=>$(x[0]).value=g[x[1]]||'');
+ irRows(g.lines.filter(l=>(+l.qty||0)>0).map(l=>({line:l.line,cat:l.cat,name:l.name,code:l.code,uom:l.uom,spec:l.spec,issQty:l.qty,ret:irReturned(g.no,l.line,irCur===null?-1:irCur),qty:'',remarks:''})));
+}
+$('irRef').addEventListener('change',()=>irFill($('irRef').value.trim()));
+function irNote(text,ok){
+ $('irStatus').textContent=text;$('irStatus').className=ok?'ok':'';
+ if(!text)return;
+ irLogA.push({t:new Date().toLocaleTimeString('en-US'),text,ok});
+ $('irShow').disabled=false;
+ $('irLog').innerHTML=irLogA.slice().reverse().map(m=>`<div style='color:${m.ok?'#23925a':'#d64545'}'>${m.t}&nbsp;&nbsp;${esc(m.text)}</div>`).join('');
+}
+function irLock(on){
+ $('irFormCard').querySelectorAll('input').forEach(e=>e.disabled=on);
+ $('irSave').hidden=on;$('irSubmit').hidden=on;
+}
+function irDirty(){
+ if($('irRef').value.trim())return true;
+ return [...$('irBody').querySelectorAll('tr[data-code]')].some(tr=>rq(tr,'.qty').value||rq(tr,'.lrem').value.trim());
+}
+function irReset(){
+ irCur=null;irLock(false);
+ $('irRef').value='';
+ IRAUTO.forEach(id=>$(id).value='');
+ $('irDate').value=today();
+ $('irBy').value=USER+', '+dt(new Date());
+ irRows([]);
+ $('irTitle').textContent='New issue return ('+irType+')';
+}
+function irTab(type){
+ irType=type;
+ $('irTabC').setAttribute('aria-selected',type==='Consumption');
+ $('irTabT').setAttribute('aria-selected',type==='Transfer');
+ $('irBanner').innerHTML='Items auto-populated from the linked GI &mdash; set <b>Return Qty</b> and <b>Remarks</b> per row';
+ $('irListTitle').textContent=type+' return list';
+ $('irGrid').querySelectorAll('.fld[data-only]').forEach(f=>{f.hidden=f.dataset.only!==(type==='Consumption'?'C':'T')});
+ irHeadRender();irReset();irNote('');irRender();
+}
+function irOpen(i){
+ const p=IRS[i];
+ irTab(p.type);irCur=i;
+ $('irRef').value=p.gi;$('irDate').value=p.date;
+ [['irCo','co'],['irBu','bu'],['irPc','pc'],['irCc','cc'],['irPl','pl'],['irWh','wh'],['irTo','to'],['irDp','dp'],['irPri','pri']].forEach(x=>$(x[0]).value=p[x[1]]||'');
+ $('irBy').value=p.by+', '+dt(new Date(p.at));
+ irRows(p.lines.map(l=>({line:l.line,cat:l.cat,name:l.name,code:l.code,uom:l.uom,spec:l.spec,issQty:l.issQty,ret:irReturned(p.gi,l.line,i),qty:l.qty,remarks:l.remarks})));
+ $('irTitle').textContent=p.no+' ('+p.type+', '+p.mode+')';
+ irLock(p.mode==='Submitted');
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function irSave(mode){
+ const v=id=>$(id).value.trim(),sub=mode==='Submitted';
+ let err='';
+ if(!v('irRef'))err='Select the GI Ref.#.';
+ else if(sub&&!v('irDate'))err='Enter the return date.';
+ const lines=[];let any=false;
+ if(!err){
+  [...$('irBody').querySelectorAll('tr[data-code]')].forEach(tr=>{
+   if(err)return;
+   const ln=rq(tr,'.ln').value,qty=+rq(tr,'.qty').value||0,iss=+rq(tr,'.iss').dataset.v||0,ret=+rq(tr,'.ret').dataset.v||0;
+   if(qty<0){err='Line '+ln+': return qty cannot be negative.';return}
+   if(sub&&qty>0){
+    if(qty>iss-ret){err='Line '+ln+': return qty cannot exceed the returnable qty ('+fmt(iss-ret)+').';return}
+    any=true;
+   }
+   lines.push({line:ln,cat:rq(tr,'.cat').value,name:rq(tr,'.nm').value,code:rq(tr,'.code').value,uom:rq(tr,'.uom').value,spec:rq(tr,'.spec').value,issQty:iss,qty,remarks:rq(tr,'.lrem').value.trim()});
+  });
+  if(!err&&sub&&!any)err='Enter a return qty for at least one item.';
+  if(!err&&!lines.length)err='No items to return. Select a GI Ref.# first.';
+ }
+ if(err){irNote(err,false);return}
+ const rec={type:irType,no:irCur!==null?IRS[irCur].no:'IR-'+String(irNo).padStart(6,'0'),gi:v('irRef'),mode,date:v('irDate'),co:v('irCo'),bu:v('irBu'),pc:v('irPc'),cc:v('irCc'),pl:v('irPl'),dp:v('irDp'),pri:v('irPri'),to:v('irTo'),wh:v('irWh'),by:irCur!==null?IRS[irCur].by:USER,at:irCur!==null?IRS[irCur].at:new Date().toISOString(),lines};
+ const irNew=irCur===null;
+ if(irCur!==null)IRS[irCur]=rec;else{IRS.push(rec);irNo++}
+ pushDoc('ir',rec,irNew,rec.no);
+ irReset();irRender();
+ irNote(rec.no+' ('+rec.gi+') saved as '+mode+'.',true);
+}
+function irRender(){
+ const q=$('irSearch').value.trim().toLowerCase();
+ const rows=IRS.map((p,i)=>({p,i})).filter(x=>x.p.type===irType&&(!q||[x.p.no,x.p.gi,x.p.co,x.p.lines.map(l=>l.name+' '+l.code).join(' ')].join(' ').toLowerCase().includes(q)));
+ $('irList').innerHTML=rows.length?rows.map((x,k)=>{
+  const p=x.p,sub=p.mode==='Submitted';
+  return `<tr><td>${k+1}</td><td><b>${esc(p.no)}</b></td><td>${esc(p.gi)}</td><td>${p.date?new Date(p.date+'T00:00').toLocaleDateString('en-US'):''}</td><td>${esc(p.co)}</td><td>${esc(p.wh)}</td><td>${p.lines.length}</td><td><span class='st ${sub?'c':'d'}'>${p.mode.toUpperCase()}</span></td><td>${esc(p.by)}<div class='more'>${dt(new Date(p.at))}</div></td><td class='acts'><button type='button' class='ab v' data-a='open' data-i='${x.i}'>${sub?'View':'Edit'}</button>${sub?'':`<button type='button' class='ab dl' data-a='del' data-i='${x.i}'>Delete</button>`}</td></tr>`;
+ }).join(''):`<tr><td colspan='10' class='empty'>No ${irType.toLowerCase()} returns saved yet.</td></tr>`;
+}
+$('irTabC').onclick=()=>irTab('Consumption');
+$('irTabT').onclick=()=>irTab('Transfer');
+$('irSave').onclick=()=>irSave('Draft');
+$('irSubmit').onclick=()=>irSave('Submitted');
+$('irShow').onclick=()=>$('irLog').classList.toggle('on');
+$('irSearch').oninput=irRender;
+$('irTgl').onclick=()=>{
+ const w=$('irItemsWrap');w.hidden=!w.hidden;
+ $('irTgl').innerHTML=w.hidden?'+':'&minus;';
+ $('irTgl').setAttribute('aria-expanded',String(!w.hidden));
+};
+$('irExit').onclick=()=>{
+ if(!irExitArm&&!$('irSave').hidden&&irDirty()){irExitArm=true;irNote('Unsaved changes will be lost. Click Exit again to leave.',false);setTimeout(()=>{irExitArm=false},4000);return}
+ irExitArm=false;irReset();irNote('');
+};
+$('irList').onclick=e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const i=+b.dataset.i;
+ if(b.dataset.a==='open')irOpen(i);
+ else if(b.dataset.arm){pushDel('ir',IRS[i].no);IRS.splice(i,1);if(irCur===i)irReset();else if(irCur!==null&&i<irCur)irCur--;irRender()}
+ else{b.dataset.arm=1;b.textContent='Confirm';setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},3000)}
+};
+irTab('Consumption');
+/* ---------- Google Sheet sync ---------- */
+const Auth={token:'',user:null,forced:false};
+let leaving=false;
+const APPR=[],DIR=[];      // approval log and the list of active users (uid + name), both from the sheet
+const Sync={q:Promise.resolve(),pending:0,failed:[],state:'',err:''};
+const uid=()=>'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,9);
+const hasGas=()=>typeof google!=='undefined'&&!!google.script&&!!google.script.run;
+function backend(){return hasGas()?'gas':(GS_URL?'url':'none')}
+function unwrap(r){
+ if(r&&r.ok)return r;
+ if(r&&r.code==='SESSION'&&typeof sessionLost==='function')sessionLost();
+ throw new Error((r&&r.error)||'Server error');
+}
+function rpc(req){
+ req.token=Auth.token;
+ const b=backend();
+ if(b==='gas')return new Promise((res,rej)=>google.script.run
+  .withSuccessHandler(s=>{let r;try{r=JSON.parse(s)}catch(e){return rej(new Error('Bad reply from the server'))}try{res(unwrap(r))}catch(e){rej(e)}})
+  .withFailureHandler(e=>rej(new Error((e&&e.message)||String(e))))
+  .apiCall(JSON.stringify(req)));
+ if(b==='url')return fetch(GS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(req)})
+  .then(r=>r.json()).then(unwrap);
+ return Promise.reject(new Error('Not connected to a Google Sheet'));
+}
+const syncEl=document.createElement('button');
+syncEl.type='button';syncEl.id='syncBadge';nav.appendChild(syncEl);
+function badge(){
+ const s=Sync;let t,c,tip='';
+ if(backend()==='none'){t='Demo mode — not saved to Google Sheet';c='demo';tip='Open this file from your Apps Script web app, or paste the web app URL into GS_URL.'}
+ else if(s.state==='loading'){t='Loading from Google Sheet…';c='busy'}
+ else if(s.state==='loadfail'){t='Could not load — click to retry';c='bad';tip=s.err}
+ else if(s.failed.length){t='Not saved ('+s.failed.length+') — click to retry';c='bad';tip=s.err}
+ else if(s.pending){t='Saving to Google Sheet… ('+s.pending+')';c='busy'}
+ else{t='Synced with Google Sheet';c='ok';tip='Click to reload the data from the sheet (open forms are cleared)'}
+ syncEl.textContent=(c==='ok'?'✔ ':c==='bad'?'⚠ ':c==='busy'?'⟳ ':'')+t;
+ syncEl.className='sync '+c;syncEl.title=tip;
+}
+function enqueue(req,done){
+ if(backend()==='none')return;
+ if(Sync.failed.length){Sync.failed.push({req,done});badge();return}
+ Sync.pending++;badge();
+ Sync.q=Sync.q.then(()=>{
+  if(Sync.failed.length){Sync.failed.push({req,done});Sync.pending--;return}
+  return rpc(req).then(r=>{Sync.pending--;if(done)done(r)},e=>{Sync.pending--;Sync.err=e.message;Sync.failed.push({req,done})});
+ }).then(badge);
+}
+const DKEY={pr:'ref',str:'ref',sr:'ref',grn:'grn',gi:'no',ir:'no'};
+function pushMaster(ent,rec){enqueue({action:'saveMaster',entity:ent,rec:rec})}
+function pushDelMaster(ent,rec){if(rec&&rec._id)enqueue({action:'deleteMaster',entity:ent,id:rec._id})}
+function pushDoc(ent,rec,isNew,orig){
+ enqueue({action:'saveDoc',entity:ent,rec:rec,isNew:isNew,origKey:orig},r=>{
+  const k=DKEY[ent];
+  if(r.ap)Object.assign(rec,r.ap);                       // approval fields are decided by the server
+  if(r.key&&r.key!==rec[k]){rec[k]=r.key;bumpCounters();rerenderLists()}
+  else if(r.ap)rerenderLists();
+  if(r.ap&&typeof pollNow==='function')pollNow();
+ });
+}
+function pushDel(ent,key){enqueue({action:'deleteDoc',entity:ent,key:key})}
+const maxNo=(arr,k,p)=>{const re=new RegExp('^'+p+'-(\\d+)$');let m=0;arr.forEach(r=>{const x=re.exec(r[k]||'');if(x)m=Math.max(m,+x[1])});return m};
+function bumpCounters(){
+ prNo=Math.max(prNo,maxNo(PRS,'ref','PR')+1);strNo=Math.max(strNo,maxNo(STRS,'ref','STR')+1);srNo=Math.max(srNo,maxNo(SRS,'ref','SR')+1);
+ grNo=Math.max(grNo,maxNo(GRS,'grn','GRN')+1);giNo=Math.max(giNo,maxNo(GIS,'no','GI')+1);irNo=Math.max(irNo,maxNo(IRS,'no','IR')+1);
+}
+function rerenderLists(){renderItems();lcRender();wcRender();plRender();slRender();qlRender();gRender();giRender();irRender()}
+function resetForms(){clearForm();lcClear();wcClear();prReset();sReset();qReset();gReset();giReset();irReset()}
+const setArr=(a,b)=>{a.length=0;(b||[]).forEach(x=>a.push(x))};
+function applyData(d,soft){          // soft = refresh the lists only, leave open forms alone
+ setArr(ITEMS,d.items);setArr(LOCS,d.locs);setArr(WHS,d.whs);setArr(PRS,d.pr);setArr(STRS,d.str);
+ setArr(SRS,d.sr);setArr(GRS,d.grn);setArr(GIS,d.gi);setArr(IRS,d.ir);setArr(APPR,d.approvals);setArr(DIR,d.dir);
+ ITEMS.forEach(i=>{if(i.uom&&!UOMS.includes(i.uom))UOMS.push(i.uom)});
+ if(!soft)prNo=strNo=srNo=grNo=giNo=irNo=1;
+ bumpCounters();
+ if(!soft)resetForms();
+ rerenderLists();
+}
+async function softReload(){
+ if(backend()==='none'||!Auth.token||Sync.pending||Sync.failed.length)return;
+ try{await Sync.q;const r=await rpc({action:'getAll'});applyData(r.data,true)}catch(e){}
+}
+function reloadAll(){
+ Sync.state='loading';badge();
+ return Sync.q.then(()=>rpc({action:'getAll'})).then(r=>{applyData(r.data);Sync.state=''},e=>{Sync.state='loadfail';Sync.err=e.message}).then(badge);
+}
+syncEl.onclick=()=>{
+ if(backend()==='none')return;
+ if(Sync.failed.length){const l=Sync.failed.splice(0);Sync.err='';l.forEach(x=>enqueue(x.req,x.done));return}
+ if(Sync.state==='loadfail'||!Sync.pending)reloadAll();
+};
+window.addEventListener('beforeunload',e=>{if(!leaving&&(Sync.pending||Sync.failed.length)){e.preventDefault();e.returnValue=''}});
+/* ---------- Reports (always read fresh from the Google Sheet) ---------- */
+const RP={name:'',D:null,out:null,tok:0,at:null};
+const lday=iso=>{if(!iso)return '';const d=new Date(iso);if(isNaN(d))return String(iso).slice(0,10);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const inRange=(d,f,t)=>!(f&&d<f)&&!(t&&d>t);
+const uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>String(x).localeCompare(String(y)));
+const hit=(F,txt)=>!F.q||txt.toLowerCase().includes(F.q.toLowerCase());
+const byDate=(a,b)=>(a.date||'').localeCompare(b.date||'')||String(a.ref||a.no||a.grn||'').localeCompare(String(b.ref||b.no||b.grn||''));
+const BADGE={'OK':'c','Fully Received':'c','Fully Issued':'c','Received':'c','Submitted':'c','Complete':'c','Partial':'w','Partially Received':'w','Partially Issued':'w','Reorder':'w','Pending':'b','Out of Stock':'r','Below Min':'r','Overdue':'r','Over Received':'r','Draft':'d','Awaiting Approval':'w','Rejected':'r','Approved':'c'};
+const badgeHtml=t=>`<span class='st ${BADGE[t]||'d'}'>${esc(String(t).toUpperCase())}</span>`;
+const DATEF=[{k:'from',t:'date',l:'From date'},{k:'to',t:'date',l:'To date'}];
+const issTo=g=>g.type==='Consumption'?(g.cc||''):(g.to||'');
+const REP={
+ 'Stock Report':{icon:'📦',sub:'Opening, received, issued, returned and closing stock by warehouse',
+  filters:DATEF.concat([
+   {k:'wh',t:'sel',l:'Warehouse',o:D=>uniq(D.whs.map(w=>w.wh))},
+   {k:'cat',t:'sel',l:'Item Category',o:D=>uniq(D.items.map(i=>i.cat))},
+   {k:'q',t:'text',l:'Search',ph:'Item code or name'},
+   {k:'low',t:'chk',l:'Low / out of stock only'},
+   {k:'zero',t:'chk',l:'Include items with no movement'}]),
+  cols:[{k:'wh',l:'Warehouse'},{k:'code',l:'Item Code'},{k:'name',l:'Item Name'},{k:'cat',l:'Category'},{k:'uom',l:'UOM'},
+   {k:'open',l:'Opening',t:'n'},{k:'rec',l:'Received',t:'n'},{k:'iss',l:'Issued',t:'n'},{k:'ret',l:'Returned',t:'n'},{k:'close',l:'Closing Stock',t:'n'},
+   {k:'min',l:'Min Stock',t:'n'},{k:'reorder',l:'Reorder Level',t:'n'},{k:'status',l:'Status',t:'b'}],
+  build(D,F){
+   const M=new Map();
+   const get=(wh,code)=>{const k=wh+'\u0001'+code;let r=M.get(k);if(!r){const it=D.items.find(x=>x.code===code)||{};r={wh,code,name:it.name||'',cat:it.cat||'',uom:it.uom||'',min:+it.min||0,reorder:+it.reorder||0,open:0,rec:0,iss:0,ret:0};M.set(k,r)}return r};
+   const put=(wh,l,date,fld,sign)=>{
+    if(!l.code||!wh)return;
+    const r=get(wh,l.code);if(!r.name&&l.name){r.name=l.name;r.cat=l.cat;r.uom=l.uom}
+    const q=+l.qty||0;
+    if(F.from&&date<F.from)r.open+=sign*q;else if(F.to&&date>F.to)return;else r[fld]+=q;
+   };
+   D.grn.forEach(g=>g.lines.forEach(l=>put(g.wh,l,lday(g.at),'rec',1)));
+   D.gi.forEach(g=>{if(g.mode==='Submitted')g.lines.forEach(l=>put(g.wh,l,g.date,'iss',-1))});
+   D.ir.forEach(g=>{if(g.mode==='Submitted')g.lines.forEach(l=>put(g.wh,l,g.date,'ret',1))});
+   if(F.zero){const whs=uniq(D.whs.map(w=>w.wh));D.items.filter(i=>i.status==='Active').forEach(i=>whs.forEach(w=>get(w,i.code)))}
+   let rows=[...M.values()].map(r=>{
+    r.close=r.open+r.rec-r.iss+r.ret;
+    r.status=r.close<=0?'Out of Stock':(r.min>0&&r.close<r.min)?'Below Min':(r.reorder>0&&r.close<=r.reorder)?'Reorder':'OK';
+    return r;
+   }).filter(r=>(!F.wh||r.wh===F.wh)&&(!F.cat||r.cat===F.cat)&&hit(F,r.code+' '+r.name)&&(!F.low||r.status!=='OK'));
+   rows.sort((a,b)=>a.wh.localeCompare(b.wh)||a.code.localeCompare(b.code));
+   const n=s=>rows.filter(r=>r.status===s).length;
+   return {rows,cards:[{l:'Items listed',v:rows.length},{l:'Out of stock',v:n('Out of Stock')},{l:'Below min / reorder',v:n('Below Min')+n('Reorder')},{l:'OK',v:n('OK')}]};
+  }},
+ 'Receiving Report':{icon:'📥',sub:'Goods received (purchase and transfer) line by line',
+  filters:DATEF.concat([
+   {k:'type',t:'sel',l:'Receive Type',o:()=>['Purchase','Transfer']},
+   {k:'wh',t:'sel',l:'Warehouse',o:D=>uniq(D.whs.map(w=>w.wh))},
+   {k:'q',t:'text',l:'Search',ph:'GRN, PR, PO or item'}]),
+  cols:[{k:'grn',l:'GRN No'},{k:'type',l:'Type'},{k:'date',l:'Date',t:'d'},{k:'pr',l:'PR No'},{k:'po',l:'PO No'},{k:'co',l:'Company'},{k:'wh',l:'Warehouse'},
+   {k:'code',l:'Item Code'},{k:'name',l:'Item Name'},{k:'uom',l:'UOM'},{k:'qty',l:'Received Qty',t:'n'},{k:'rate',l:'Rate',t:'n'},{k:'amount',l:'Amount',t:'n',sum:true},
+   {k:'by',l:'Received By'},{k:'rem',l:'Remarks'}],
+  build(D,F){
+   const rows=[];
+   D.grn.forEach(g=>{
+    const date=lday(g.at);
+    if(!inRange(date,F.from,F.to)||(F.type&&g.type!==F.type)||(F.wh&&g.wh!==F.wh))return;
+    g.lines.forEach(l=>{
+     const r={grn:g.grn,type:g.type,date,pr:g.pr,po:g.po,co:g.co,wh:g.wh,code:l.code,name:l.name,uom:l.uom,qty:+l.qty||0,rate:+l.rate||0,amount:+l.amount||0,by:g.by,rem:l.remarks||g.rem||''};
+     if(hit(F,[r.grn,r.pr,r.po,r.code,r.name].join(' ')))rows.push(r);
+    });
+   });
+   rows.sort((a,b)=>a.date.localeCompare(b.date)||a.grn.localeCompare(b.grn));
+   return {rows,cards:[{l:'GRNs',v:new Set(rows.map(r=>r.grn)).size},{l:'Item lines',v:rows.length},{l:'Total amount',v:fmt(rows.reduce((s,r)=>s+r.amount,0))}]};
+  }},
+ 'Issuing Report':{icon:'📤',sub:'Goods issued (consumption and transfer) line by line',
+  filters:DATEF.concat([
+   {k:'type',t:'sel',l:'Issue Type',o:()=>['Consumption','Transfer']},
+   {k:'wh',t:'sel',l:'Issue From Warehouse',o:D=>uniq(D.whs.map(w=>w.wh))},
+   {k:'status',t:'sel',l:'Status',o:()=>['Submitted','Draft'],def:'Submitted'},
+   {k:'q',t:'text',l:'Search',ph:'GI, SR/STR, cost center or item'}]),
+  cols:[{k:'no',l:'GI No'},{k:'type',l:'Type'},{k:'date',l:'Date',t:'d'},{k:'ref',l:'SR / STR Ref#'},{k:'co',l:'Company'},{k:'to',l:'Issued To (Cost Center / Warehouse)'},{k:'wh',l:'Issued From'},
+   {k:'code',l:'Item Code'},{k:'name',l:'Item Name'},{k:'uom',l:'UOM'},{k:'reqQty',l:'Requested Qty',t:'n'},{k:'qty',l:'Issued Qty',t:'n'},{k:'rem',l:'Remarks'},{k:'status',l:'Status',t:'b'},{k:'by',l:'Issued By'}],
+  build(D,F){
+   const rows=[];
+   D.gi.forEach(g=>{
+    if(!inRange(g.date,F.from,F.to)||(F.type&&g.type!==F.type)||(F.wh&&g.wh!==F.wh)||(F.status&&g.mode!==F.status))return;
+    g.lines.forEach(l=>{
+     if(g.mode==='Submitted'&&!(+l.qty>0))return;
+     const r={no:g.no,type:g.type,date:g.date,ref:g.ref,co:g.co,to:issTo(g),wh:g.wh,code:l.code,name:l.name,uom:l.uom,reqQty:+l.reqQty||0,qty:+l.qty||0,rem:l.remarks||'',status:g.mode,by:g.by};
+     if(hit(F,[r.no,r.ref,r.to,r.code,r.name].join(' ')))rows.push(r);
+    });
+   });
+   rows.sort(byDate);
+   return {rows,cards:[{l:'Issue vouchers',v:new Set(rows.map(r=>r.no)).size},{l:'Item lines',v:rows.length}]};
+  }},
+ 'Issue Return Report':{icon:'↩️',sub:'Items returned against goods issues, line by line',
+  filters:DATEF.concat([
+   {k:'type',t:'sel',l:'Return Type',o:()=>['Consumption','Transfer']},
+   {k:'wh',t:'sel',l:'Return To Warehouse',o:D=>uniq(D.whs.map(w=>w.wh))},
+   {k:'status',t:'sel',l:'Status',o:()=>['Submitted','Draft'],def:'Submitted'},
+   {k:'q',t:'text',l:'Search',ph:'IR, GI, cost center or item'}]),
+  cols:[{k:'no',l:'IR No'},{k:'type',l:'Type'},{k:'date',l:'Date',t:'d'},{k:'gi',l:'GI No'},{k:'co',l:'Company'},{k:'to',l:'Returned From (Cost Center / Warehouse)'},{k:'wh',l:'Returned To'},
+   {k:'code',l:'Item Code'},{k:'name',l:'Item Name'},{k:'uom',l:'UOM'},{k:'issQty',l:'Issued Qty',t:'n'},{k:'qty',l:'Returned Qty',t:'n'},{k:'rem',l:'Remarks'},{k:'status',l:'Status',t:'b'},{k:'by',l:'Returned By'}],
+  build(D,F){
+   const rows=[];
+   D.ir.forEach(g=>{
+    if(!inRange(g.date,F.from,F.to)||(F.type&&g.type!==F.type)||(F.wh&&g.wh!==F.wh)||(F.status&&g.mode!==F.status))return;
+    g.lines.forEach(l=>{
+     if(g.mode==='Submitted'&&!(+l.qty>0))return;
+     const r={no:g.no,type:g.type,date:g.date,gi:g.gi,co:g.co,to:issTo(g),wh:g.wh,code:l.code,name:l.name,uom:l.uom,issQty:+l.issQty||0,qty:+l.qty||0,rem:l.remarks||'',status:g.mode,by:g.by};
+     if(hit(F,[r.no,r.gi,r.to,r.code,r.name].join(' ')))rows.push(r);
+    });
+   });
+   rows.sort(byDate);
+   return {rows,cards:[{l:'Return vouchers',v:new Set(rows.map(r=>r.no)).size},{l:'Item lines',v:rows.length}]};
+  }},
+ 'PR Status':{icon:'📋',sub:'Purchase requisitions against goods received (matched on PR No and item code)',
+  filters:DATEF.concat([
+   {k:'status',t:'sel',l:'PR Status',o:()=>['Draft','Rejected','Awaiting Approval','Pending','Partially Received','Fully Received']},
+   {k:'wh',t:'sel',l:'Warehouse',o:D=>uniq(D.pr.map(p=>p.wh))},
+   {k:'q',t:'text',l:'Search',ph:'PR Ref# or item'},
+   {k:'overdue',t:'chk',l:'Overdue only'}]),
+  cols:[{k:'ref',l:'PR Ref#'},{k:'date',l:'PR Date',t:'d'},{k:'reqDate',l:'Required Date',t:'d'},{k:'co',l:'Company'},{k:'wh',l:'Warehouse'},{k:'type',l:'Type'},{k:'pri',l:'Priority'},
+   {k:'code',l:'Item Code'},{k:'name',l:'Item Name'},{k:'uom',l:'UOM'},{k:'req',l:'Required Qty',t:'n'},{k:'got',l:'Received Qty',t:'n'},{k:'pend',l:'Pending Qty',t:'n'},
+   {k:'lstatus',l:'Line Status',t:'b'},{k:'status',l:'PR Status',t:'b'},{k:'due',l:'Due',t:'b'}],
+  build(D,F){
+   const rec={},t=today();
+   D.grn.forEach(g=>{if(!g.pr)return;g.lines.forEach(l=>{const k=g.pr+'\u0001'+l.code;rec[k]=(rec[k]||0)+(+l.qty||0)})});
+   const rows=[],c={n:0,draft:0,wait:0,pend:0,part:0,full:0,over:0};
+   D.pr.forEach(p=>{
+    if(!inRange(p.date,F.from,F.to)||(F.wh&&p.wh!==F.wh))return;
+    const ls=(p.lines.length?p.lines:[{}]).map(l=>{const req=+l.qty||0,got=rec[p.ref+'\u0001'+l.code]||0;return {l,req,got,pend:Math.max(req-got,0)}});
+    const wait=p.mode==='Complete'&&!!p.apSt&&p.apSt!=='Approved';
+    const status=p.mode==='Draft'?(p.apSt==='Rejected'?'Rejected':'Draft'):wait?'Awaiting Approval':(!p.lines.length?'Pending':ls.every(x=>x.got>=x.req)?'Fully Received':ls.some(x=>x.got>0)?'Partially Received':'Pending');
+    const overdue=p.mode==='Complete'&&!wait&&status!=='Fully Received'&&!!p.reqDate&&p.reqDate<t;
+    if((F.status&&status!==F.status)||(F.overdue&&!overdue))return;
+    if(!hit(F,p.ref+' '+ls.map(x=>(x.l.name||'')+' '+(x.l.code||'')).join(' ')))return;
+    c.n++;if(status==='Draft'||status==='Rejected')c.draft++;else if(status==='Awaiting Approval')c.wait++;else if(status==='Pending')c.pend++;else if(status==='Partially Received')c.part++;else c.full++;if(overdue)c.over++;
+    ls.forEach(x=>rows.push({ref:p.ref,date:p.date,reqDate:p.reqDate,co:p.co,wh:p.wh,type:p.type,pri:p.pri,code:x.l.code||'',name:x.l.name||'',uom:x.l.uom||'',req:x.req,got:x.got,pend:x.pend,
+     lstatus:p.mode==='Draft'?(p.apSt==='Rejected'?'Rejected':'Draft'):wait?'Awaiting Approval':(x.got>x.req&&x.req>0?'Over Received':x.got>=x.req&&x.req>0?'Received':x.got>0?'Partial':'Pending'),status,due:overdue?'Overdue':''}));
+   });
+   rows.sort(byDate);
+   return {rows,cards:[{l:'Requisitions',v:c.n},{l:'Draft / rejected',v:c.draft},{l:'Awaiting approval',v:c.wait},{l:'Pending',v:c.pend},{l:'Partially received',v:c.part},{l:'Fully received',v:c.full},{l:'Overdue',v:c.over}]};
+  }},
+ 'SR Status':{icon:'🏬',sub:'Store requisitions against consumption issues (matched on SR Ref# and item code)',
+  filters:DATEF.concat([
+   {k:'status',t:'sel',l:'SR Status',o:()=>['Draft','Rejected','Awaiting Approval','Pending','Partially Issued','Fully Issued']},
+   {k:'cc',t:'sel',l:'Cost Center',o:D=>uniq(D.sr.map(s=>s.cc))},
+   {k:'q',t:'text',l:'Search',ph:'SR Ref#, cost center or item'}]),
+  cols:[{k:'ref',l:'SR Ref#'},{k:'date',l:'SR Date',t:'d'},{k:'co',l:'Company'},{k:'cc',l:'Cost Center'},{k:'pri',l:'Priority'},
+   {k:'code',l:'Item Code'},{k:'name',l:'Item Name'},{k:'uom',l:'UOM'},{k:'req',l:'SR Qty',t:'n'},{k:'iss',l:'Issued Qty',t:'n'},{k:'ret',l:'Returned Qty',t:'n'},{k:'pend',l:'Pending Qty',t:'n'},
+   {k:'lstatus',l:'Line Status',t:'b'},{k:'status',l:'SR Status',t:'b'}],
+  build(D,F){
+   const iss={},ret={},giRef={};
+   D.gi.forEach(g=>{giRef[g.no]=g.ref;if(g.type!=='Consumption'||g.mode!=='Submitted')return;g.lines.forEach(l=>{const k=g.ref+'\u0001'+l.code;iss[k]=(iss[k]||0)+(+l.qty||0)})});
+   D.ir.forEach(r=>{if(r.type!=='Consumption'||r.mode!=='Submitted')return;const sr=giRef[r.gi];if(!sr)return;r.lines.forEach(l=>{const k=sr+'\u0001'+l.code;ret[k]=(ret[k]||0)+(+l.qty||0)})});
+   const rows=[],c={n:0,draft:0,wait:0,pend:0,part:0,full:0};
+   D.sr.forEach(s=>{
+    if(!inRange(s.date,F.from,F.to)||(F.cc&&s.cc!==F.cc))return;
+    const ls=(s.lines.length?s.lines:[{}]).map(l=>{const k=s.ref+'\u0001'+l.code,req=+l.qty||0;return {l,req,is:iss[k]||0,rt:ret[k]||0}});
+    const wait=s.status==='Complete'&&!!s.apSt&&s.apSt!=='Approved';
+    const status=s.status==='Draft'?(s.apSt==='Rejected'?'Rejected':'Draft'):wait?'Awaiting Approval':(!s.lines.length?'Pending':ls.every(x=>x.is>=x.req)?'Fully Issued':ls.some(x=>x.is>0)?'Partially Issued':'Pending');
+    if(F.status&&status!==F.status)return;
+    if(!hit(F,s.ref+' '+s.cc+' '+ls.map(x=>(x.l.name||'')+' '+(x.l.code||'')).join(' ')))return;
+    c.n++;if(status==='Draft'||status==='Rejected')c.draft++;else if(status==='Awaiting Approval')c.wait++;else if(status==='Pending')c.pend++;else if(status==='Partially Issued')c.part++;else c.full++;
+    ls.forEach(x=>rows.push({ref:s.ref,date:s.date,co:s.co,cc:s.cc,pri:s.pri,code:x.l.code||'',name:x.l.name||'',uom:x.l.uom||'',req:x.req,iss:x.is,ret:x.rt,pend:Math.max(x.req-x.is,0),
+     lstatus:s.status==='Draft'?(s.apSt==='Rejected'?'Rejected':'Draft'):wait?'Awaiting Approval':(x.is>=x.req&&x.req>0?'Fully Issued':x.is>0?'Partially Issued':'Pending'),status}));
+   });
+   rows.sort(byDate);
+   return {rows,cards:[{l:'Requisitions',v:c.n},{l:'Draft / rejected',v:c.draft},{l:'Awaiting approval',v:c.wait},{l:'Pending',v:c.pend},{l:'Partially issued',v:c.part},{l:'Fully issued',v:c.full}]};
+  }}
+};
+async function repData(){
+ if(backend()==='none')return {items:ITEMS,locs:LOCS,whs:WHS,pr:PRS,str:STRS,sr:SRS,grn:GRS,gi:GIS,ir:IRS};
+ await Sync.q;
+ const r=await rpc({action:'getAll'});
+ return r.data;
+}
+function currentF(){
+ const F={};
+ REP[RP.name].filters.forEach(f=>{const e=$('rf_'+f.k);if(e)F[f.k]=f.t==='chk'?e.checked:e.value.trim()});
+ return F;
+}
+function buildFilters(cfg,prev){
+ $('rpFilters').innerHTML=cfg.filters.map(f=>{
+  if(f.t==='chk')return `<div class='fld rpchk'><label><input type='checkbox' id='rf_${f.k}'> ${esc(f.l)}</label></div>`;
+  const inp=f.t==='date'?`<input type='date' id='rf_${f.k}'>`:f.t==='text'?`<input type='search' id='rf_${f.k}' placeholder="${esc(f.ph||'Search')}" autocomplete='off'>`
+   :`<select id='rf_${f.k}'>${['',...f.o(RP.D)].map(o=>`<option value="${esc(o)}">${o===''?'All':esc(o)}</option>`).join('')}</select>`;
+  return `<div class='fld'><label for='rf_${f.k}'>${esc(f.l)}</label>${inp}</div>`;
+ }).join('');
+ cfg.filters.forEach(f=>{
+  const e=$('rf_'+f.k),v=prev&&f.k in prev?prev[f.k]:f.def;
+  if(f.t==='chk')e.checked=!!v;else if(v!==undefined)e.value=v;
+  e.addEventListener(f.t==='text'?'input':'change',renderReport);
+ });
+}
+function cellHtml(c,v){
+ if(c.t==='d')return v?new Date(v+'T00:00').toLocaleDateString('en-US'):'';
+ if(c.t==='n')return v===''||v==null?'':fmt(v);
+ if(c.t==='b')return v?badgeHtml(v):'';
+ return esc(v==null?'':v);
+}
+function renderReport(){
+ const cfg=REP[RP.name];if(!cfg||!RP.D)return;
+ const F=currentF(),out=cfg.build(RP.D,F);
+ RP.out=out;
+ $('rpSum').innerHTML=out.cards.map(c=>`<div class='rpc'><b>${esc(c.v)}</b><span>${esc(c.l)}</span></div>`).join('');
+ $('rpHead').innerHTML='<tr>'+cfg.cols.map(c=>`<th class='${c.t==='n'?'n':''}'>${esc(c.l)}</th>`).join('')+'</tr>';
+ $('rpBody').innerHTML=out.rows.length?out.rows.map(r=>'<tr>'+cfg.cols.map(c=>`<td class='${c.t==='n'?'n':''}'>${cellHtml(c,r[c.k])}</td>`).join('')+'</tr>').join(''):`<tr><td colspan='${cfg.cols.length}' class='empty'>No records match the filters.</td></tr>`;
+ const tot={};
+ cfg.cols.forEach(c=>{if(c.sum)tot[c.k]=out.rows.reduce((s,r)=>s+(+r[c.k]||0),0)});
+ out.totals=Object.keys(tot).length?tot:null;
+ $('rpFoot').innerHTML=out.totals&&out.rows.length?'<tr>'+cfg.cols.map((c,i)=>`<td class='${c.t==='n'?'n':''}'>${c.sum?fmt(tot[c.k]):(i===0?'Total':'')}</td>`).join('')+'</tr>':'';
+ const act=cfg.filters.filter(f=>F[f.k]).map(f=>f.l+': '+(f.t==='chk'?'Yes':F[f.k]));
+ $('rpMeta').className='';
+ $('rpMeta').textContent=out.rows.length+' row(s)'+(act.length?' · '+act.join(', '):'')+' · '+(backend()==='none'?'Demo data (not connected to a Google Sheet)':'Loaded from Google Sheet at '+RP.at.toLocaleTimeString('en-US'))+(Sync.failed.length?' · '+Sync.failed.length+' change(s) not saved yet':'');
+}
+async function openReport(name,keep){
+ const cfg=REP[name],tok=++RP.tok,prev=keep&&RP.name===name&&RP.D?currentF():null;
+ RP.name=name;
+ $('rpTitle').innerHTML='<span aria-hidden="true">'+cfg.icon+'</span> '+esc(name)+' <span class="more" style="font-weight:400">'+esc(cfg.sub)+'</span>';
+ $('rpMeta').className='';$('rpMeta').textContent=backend()==='none'?'Loading…':'Loading from Google Sheet…';
+ if(!prev){$('rpFilters').innerHTML='';$('rpSum').innerHTML='';$('rpHead').innerHTML='';$('rpBody').innerHTML='';$('rpFoot').innerHTML=''}
+ let D;
+ try{D=await repData()}catch(e){if(tok!==RP.tok)return;$('rpMeta').className='err';$('rpMeta').textContent='Could not load data from the Google Sheet: '+e.message;return}
+ if(tok!==RP.tok)return;
+ RP.D=D;RP.at=new Date();
+ buildFilters(cfg,prev);renderReport();
+}
+$('rpRefresh').onclick=()=>openReport(RP.name,true);
+$('rpPrint').onclick=()=>{try{window.print()}catch(e){}};
+$('rpCsv').onclick=()=>{
+ const cfg=REP[RP.name],o=RP.out;if(!cfg||!o)return;
+ const q=v=>{v=v==null?'':String(v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+ const lines=[cfg.cols.map(c=>q(c.l)).join(',')].concat(o.rows.map(r=>cfg.cols.map(c=>q(r[c.k])).join(',')));
+ if(o.totals)lines.push(cfg.cols.map((c,i)=>c.sum?q(o.totals[c.k]):(i===0?'Total':'')).join(','));
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}));
+ a.download=RP.name.replace(/\s+/g,'_')+'_'+today()+'.csv';
+ document.body.appendChild(a);a.click();
+ setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+};
+qReset();qlRender();
+showView('Purchase Requisition');
+// open Requisition on load, like the reference screenshot
+toggle(nav.querySelector('[data-id="req"]'));
+// connect to the Google Sheet and load the saved data (demo mode when no backend is set)
+/* ---------- Sign in / session ---------- */
+const SKEY='inv_session';
+const storeTok=t=>{try{t?sessionStorage.setItem(SKEY,t):sessionStorage.removeItem(SKEY)}catch(e){}};
+const loadTok=()=>{try{return sessionStorage.getItem(SKEY)||''}catch(e){return ''}};
+const PANELS={
+ login:['auLogin','Sign in','Enter your User ID and password.','auUid'],
+ forgot:['auForgot','Forgot password','Enter your User ID. A 6-digit code is emailed to the address on your account.','auFUid'],
+ reset:['auReset','Reset password','Enter the code from the email and choose a new password.','auRCode'],
+ register:['auRegister','Register','Fill in your details. An administrator must approve your request before you can sign in.','auGName'],
+ change:['auChange','Change password','Use at least 8 characters with a letter and a number.','auCOld']
+};
+const appParts=()=>[$('nav'),document.querySelector('.hero'),document.querySelector('main')].filter(Boolean);
+function authMsg(t,kind){$('auMsg').textContent=t||'';$('auMsg').className=kind||''}
+function showAuth(p,msg,kind){
+ const d=PANELS[p];
+ document.querySelectorAll('.aup').forEach(f=>f.classList.toggle('on',f.id===d[0]));
+ $('auTitle').textContent=d[1];
+ $('auSub').textContent=p==='change'&&Auth.forced?'Choose a password of your own to continue. Use at least 8 characters with a letter and a number.':d[2];
+ $('auCCancel').hidden=!!Auth.forced;
+ authMsg(msg,kind);
+ $('authView').classList.add('on');
+ appParts().forEach(e=>{e.inert=true});
+ setTimeout(()=>{try{$(d[3]).focus()}catch(e){}},30);
+}
+function hideAuth(){$('authView').classList.remove('on');appParts().forEach(e=>{e.inert=false})}
+const pwProblem=(p,uid)=>p.length<8?'Password must be at least 8 characters.':(!/[A-Za-z]/.test(p)||!/[0-9]/.test(p))?'Password must contain at least one letter and one number.':(uid&&p.toLowerCase()===String(uid).toLowerCase())?'Password cannot be the same as the User ID.':'';
+document.querySelectorAll('.pwrow').forEach(w=>{
+ const i=w.querySelector('input'),b=document.createElement('button');
+ b.type='button';b.className='eye';b.textContent='Show';b.setAttribute('aria-label','Show password');
+ b.onclick=()=>{const s=i.type==='password';i.type=s?'text':'password';b.textContent=s?'Hide':'Show';b.setAttribute('aria-label',(s?'Hide':'Show')+' password')};
+ w.appendChild(b);
+});
+const acct=document.createElement('div');
+acct.className='acct';acct.hidden=true;
+acct.innerHTML="<span>&#128100; <b id='acctName'></b></span><span id='acctMsg' role='status'></span><button type='button' id='acctApr' hidden></button><button type='button' id='acctBell' class='bell' aria-label='Notifications'>&#128276;<b id='acctBellN'></b></button><div id='notifPanel' hidden></div><button type='button' id='acctPend' hidden></button><button type='button' id='acctPw'>Change password</button><button type='button' id='acctOut'>Sign out</button>";
+nav.appendChild(acct);
+function afterLogin(){
+ if(Sync.failed.length){const l=Sync.failed.splice(0);Sync.err='';l.forEach(x=>enqueue(x.req,x.done))}
+ reloadAll();
+}
+function enterApp(){
+ hideAuth();document.body.classList.remove('locked');
+ acct.hidden=false;
+ $('acctName').textContent=Auth.user.name+(Auth.user.role==='Admin'?' (Admin)':'');
+ const us=nav.querySelector('a[data-name="User Setup"]');
+ if(us)us.closest('li').hidden=Auth.user.role!=='Admin';
+ setPend(0);checkPending();startPoll();
+ afterLogin();
+}
+function openApprovals(){apOpenId=null;$('apDetail').hidden=true;apLoad()}
+let apOpenId=null,apInbox=null;
+const fmtAt=a=>{const d=new Date(a);return isNaN(d)?String(a||''):dt(d)};
+function apRow(x,others){
+ const d=x.doc,lv=d.apSt==='Pending L1'?1:2,n=d.lines.length,l=d.lines[0]||{};
+ return `<tr><td>${esc(x.type)}</td><td><b>${esc(d.ref)}</b></td><td>${esc(d.by)}</td><td>${esc(d.date||'')}</td><td>${esc(d.pri||'')}</td><td>${esc(l.name||'')}${n>1?` <span class='more'>+${n-1} more</span>`:''}</td><td>${others?esc(dirName(lv===1?d.ap1:d.ap2))+' ('+lv+(d.ap2?'/2':'/1')+')':lv+(d.ap2?' of 2':' of 1')}</td><td class='acts'><button type='button' class='ab v' data-e='${x.ent}' data-r='${esc(d.ref)}'>Review</button></td></tr>`;
+}
+async function apLoad(keep){
+ if(backend()==='none'){$('apNote').textContent='Approvals need the Google Sheet backend and sign-in.';return}
+ try{
+  const r=await rpc({action:'inbox'});apInbox=r;APPR.length=0;r.approvals.forEach(a=>APPR.push(a));
+  if(!keep)$('apNote').textContent='';
+  $('apMine').innerHTML=r.mine.length?r.mine.map(x=>apRow(x)).join(''):"<tr><td colspan='8' class='empty'>Nothing is waiting for you.</td></tr>";
+  const adm=Auth.user.role==='Admin';$('apOthersWrap').hidden=!adm;
+  if(adm)$('apOthers').innerHTML=r.others.length?r.others.map(x=>apRow(x,true)).join(''):"<tr><td colspan='8' class='empty'>None.</td></tr>";
+  $('apDone').innerHTML=r.decided.length?r.decided.map(a=>`<tr><td>${esc(fmtAt(a.at))}</td><td>${esc(a.type)}</td><td>${esc(a.ref)}</td><td><span class='st ${a.action==='Rejected'?'r':'c'}'>${esc(a.action.toUpperCase())}</span></td><td>${esc(a.note||'')}</td></tr>`).join(''):"<tr><td colspan='5' class='empty'>No decisions yet.</td></tr>";
+  if(apOpenId)apDetail(apOpenId.ent,apOpenId.ref);
+ }catch(e){$('apNote').textContent=e.message||'Could not load approvals.'}
+}
+function apDocOf(ent,ref){return ({pr:PRS,str:STRS,sr:SRS}[ent]||[]).find(d=>d.ref===ref)}
+function apDetail(ent,ref){
+ apOpenId={ent,ref};
+ const all=[...(apInbox?apInbox.mine:[]),...(apInbox?apInbox.others:[])].find(x=>x.ent===ent&&x.doc.ref===ref);
+ const d=all?all.doc:apDocOf(ent,ref),box=$('apDetail');
+ if(!d){box.hidden=true;return}
+ const t=AP_T[ent],mine=!!all&&apInbox.mine.some(x=>x.ent===ent&&x.doc.ref===ref);
+ const pend=d.apSt==='Pending L1'||d.apSt==='Pending L2',over=pend&&!mine&&Auth.user.role==='Admin'&&d.byUid!==Auth.user.uid;
+ const lvl=d.apSt==='Pending L1'?1:d.apSt==='Pending L2'?2:0;
+ const lines=d.lines.map((l,i)=>`<tr><td>${i+1}</td><td>${esc(l.code||'')}</td><td>${esc(l.name||'')}</td><td>${l.qty||''}</td><td>${esc(l.uom||'')}</td></tr>`).join('');
+ const chain=[d.ap1,d.ap2].filter(Boolean).map((u,i)=>`${i+1}. ${esc(dirName(u))}${lvl===i+1?' <span class="st w">WAITING</span>':lvl>i+1||d.apSt==='Approved'?' <span class="st c">DONE</span>':''}`).join(' &rarr; ')||'No approver (auto-approved)';
+ const hist=APPR.filter(a=>a.type===t&&a.ref===ref).map(a=>`<tr><td>${esc(fmtAt(a.at))}</td><td>${esc(a.action)}${a.level?' (L'+a.level+')':''}</td><td>${esc(a.name)}</td><td>${esc(a.note||'')}</td></tr>`).join('')||"<tr><td colspan='4' class='empty'>No history.</td></tr>";
+ box.innerHTML=`<h3>${esc(t)} ${esc(ref)} <span class='st ${pend?'w':d.apSt==='Rejected'?'r':'c'}'>${esc((d.apSt||'').toUpperCase())}</span></h3>
+ <p>Requested by <b>${esc(d.by)}</b> &middot; ${esc(d.date||'')} &middot; Priority ${esc(d.pri||'-')}${d.co?' &middot; '+esc(d.co):''}</p>
+ <p>Approvers: ${chain}</p>
+ <div class='tw'><table><thead><tr><th>#</th><th>Code</th><th>Item</th><th>Qty</th><th>UOM</th></tr></thead><tbody>${lines}</tbody></table></div>
+ <h3 class='aph'>History</h3><div class='tw'><table><thead><tr><th>When</th><th>Action</th><th>By</th><th>Note</th></tr></thead><tbody>${hist}</tbody></table></div>
+ ${mine||over?`${over?"<p class='more'>You are not the approver for this step. Your decision will be logged as an admin override.</p>":''}<label for='apTxt'>Note (required to reject)</label><textarea id='apTxt' maxlength='500'></textarea><p id='apErr' role='alert' style='color:#d64545'></p><div class='apb'><button type='button' class='ab' id='apOk'>Approve</button><button type='button' class='ab dl' id='apNo'>Reject</button><button type='button' class='ab' id='apX'>Close</button></div>`:"<div class='apb'><button type='button' class='ab' id='apX'>Close</button></div>"}`;
+ box.hidden=false;
+ $('apX').onclick=()=>{apOpenId=null;box.hidden=true};
+ if(mine||over){
+  const go=async v=>{
+   const note=$('apTxt').value.trim();
+   if(v==='reject'&&!note){$('apErr').textContent='Write the reason for rejecting.';$('apTxt').focus();return}
+   $('apOk').disabled=$('apNo').disabled=true;
+   try{await rpc({action:'decide',entity:ent,ref,verdict:v,note});apOpenId=null;box.hidden=true;await softReload();await apLoad(true);pollNow();$('apNote').textContent=t+' '+ref+(v==='approve'?' approved.':' rejected.')}
+   catch(e){$('apErr').textContent=e.message||'Failed.';$('apOk').disabled=$('apNo').disabled=false}
+  };
+  $('apOk').onclick=()=>go('approve');$('apNo').onclick=()=>go('reject');
+ }
+ box.scrollIntoView&&box.scrollIntoView({block:'nearest'});
+}
+function openApDoc(ent,ref){
+ showPane('apView');apOpenId={ent,ref};apLoad().then(()=>apDetail(ent,ref));
+}
+$('apMine').onclick=$('apOthers').onclick=e=>{const b=e.target.closest('button[data-e]');if(b)apDetail(b.dataset.e,b.dataset.r)};
+// notifications
+let Poll={sig:'',timer:0,list:[]};
+function renderBell(r){
+ Poll.list=r.notifs||[];
+ $('acctBellN').textContent=r.unread?' '+r.unread:'';
+ const a=$('acctApr');a.hidden=!r.toApprove;a.textContent=r.toApprove+' to approve';
+}
+async function pollNow(){
+ if(backend()==='none'||!Auth.token||Auth.forced||document.hidden)return;
+ try{
+  const r=await rpc({action:'poll'});renderBell(r);
+  const sig=r.unread+'|'+r.toApprove+'|'+(r.notifs[0]?r.notifs[0].id:'');
+  if(Poll.sig&&sig!==Poll.sig){
+   const open=VIEWS.some(v=>v!=='apView'&&v.slice(-8)!=='ListView'&&v!=='usView'&&$(v).classList.contains('on'));
+   if(!open)softReload();
+   if($('apView').classList.contains('on'))apLoad(true);
+  }
+  Poll.sig=sig;
+ }catch(e){}
+}
+function startPoll(){clearInterval(Poll.timer);Poll.sig='';pollNow();Poll.timer=setInterval(pollNow,60000)}
+function stopPoll(){clearInterval(Poll.timer);Poll.list=[];$('notifPanel').hidden=true}
+$('acctApr').onclick=()=>{nav.querySelector('a[data-name="Approvals"]').click()};
+$('acctBell').onclick=()=>{
+ const pn=$('notifPanel');
+ if(!pn.hidden){pn.hidden=true;return}
+ pn.innerHTML=Poll.list.length?Poll.list.map(n=>`<button type='button' class='nt ${n.read==='Yes'?'':'un'}' data-id='${esc(n.id)}' data-t='${esc(n.type)}' data-r='${esc(n.ref)}'>${esc(n.text)}<small>${esc(fmtAt(n.at))}</small></button>`).join('')+"<button type='button' class='nt' data-all='1'>Mark all as read</button>":"<div class='nt'>No notifications.</div>";
+ pn.hidden=false;
+};
+$('notifPanel').onclick=async e=>{
+ const b=e.target.closest('button');if(!b)return;
+ try{await rpc({action:'readNotifs',...(b.dataset.all?{all:true}:{ids:[b.dataset.id]})})}catch(x){}
+ $('notifPanel').hidden=true;pollNow();
+ if(b.dataset.t){const ent={PR:'pr',STR:'str',SR:'sr'}[b.dataset.t];if(ent){await softReload();openApDoc(ent,b.dataset.r)}}
+};
+document.addEventListener('click',e=>{if(!e.target.closest('#notifPanel,#acctBell'))$('notifPanel').hidden=true});
+function setPend(n){const b=$('acctPend');b.hidden=!n;b.textContent='🔔 '+n+' pending'}
+async function checkPending(){
+ if(!Auth.user||Auth.user.role!=='Admin'||backend()==='none')return;
+ try{const r=await rpc({action:'listUsers'});setPend(r.users.filter(u=>u.status==='Pending').length)}catch(e){}
+}
+function startSession(r){
+ Auth.token=r.token;Auth.user=r.user;Auth.forced=!!r.user.must;storeTok(r.token);USER=r.user.name;
+ if(Auth.forced)showAuth('change','Your password is temporary.','info');else enterApp();
+}
+function sessionLost(){
+ if(!Auth.token&&$('authView').classList.contains('on'))return;
+ Auth.token='';Auth.user=null;Auth.forced=false;storeTok('');acct.hidden=true;stopPoll();
+ document.body.classList.add('locked');
+ showAuth('login','Your session has expired. Please sign in again. Unsaved changes are retried after you sign in.');
+}
+function signOut(){
+ if((Sync.pending||Sync.failed.length)&&!confirm('Some changes are not saved to the Google Sheet yet. Sign out anyway?'))return;
+ leaving=true;Auth.token='';Auth.user=null;storeTok('');
+ try{location.reload()}catch(e){}
+}
+function busy(btn,on,label){btn.disabled=on;if(label)btn.textContent=label}
+$('auLogin').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const uid=$('auUid').value.trim(),pw=$('auPw').value;
+ if(!uid||!pw){authMsg('Enter your User ID and password.');return}
+ busy($('auGo'),true,'Signing in…');authMsg('');
+ try{const r=await rpc({action:'login',userId:uid,password:pw});$('auPw').value='';startSession(r)}
+ catch(err){authMsg(err.message);$('auPw').select()}
+ busy($('auGo'),false,'Sign in');
+});
+$('auToForgot').onclick=()=>{$('auFUid').value=$('auUid').value.trim();showAuth('forgot')};
+$('auToReg').onclick=()=>showAuth('register');
+$('auGBack').onclick=()=>showAuth('login');
+$('auRegister').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const name=$('auGName').value.trim(),uid=$('auGUid').value.trim(),email=$('auGEmail').value.trim(),p1=$('auGPw').value,p2=$('auGPw2').value;
+ if(!name||!uid||!email||!p1){authMsg('Fill in all the fields.');return}
+ if(!/^[A-Za-z0-9._@-]{3,40}$/.test(uid)){authMsg('User ID must be 3-40 characters: letters, numbers and . _ @ -');return}
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){authMsg('Enter a valid email address.');return}
+ if(p1!==p2){authMsg('The passwords do not match.');return}
+ const pr=pwProblem(p1,uid);if(pr){authMsg(pr);return}
+ busy($('auGGo'),true,'Sending…');authMsg('');
+ try{
+  const r=await rpc({action:'register',userId:uid,name,email,password:p1});
+  ['auGName','auGUid','auGEmail','auGPw','auGPw2'].forEach(id=>$(id).value='');
+  $('auUid').value=uid;$('auPw').value='';
+  showAuth('login',r.message,'ok');
+ }catch(err){authMsg(err.message)}
+ busy($('auGGo'),false,'Send request');
+});
+$('auFBack').onclick=$('auRBack').onclick=()=>showAuth('login');
+$('auFHave').onclick=()=>{$('auRUid').value=$('auFUid').value.trim();showAuth('reset')};
+$('auRAgain').onclick=()=>{$('auFUid').value=$('auRUid').value.trim();showAuth('forgot')};
+$('auForgot').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const uid=$('auFUid').value.trim();
+ if(!uid){authMsg('Enter your User ID.');return}
+ busy($('auFGo'),true,'Sending…');authMsg('');
+ try{const r=await rpc({action:'forgot',userId:uid});$('auRUid').value=uid;$('auRCode').value='';showAuth('reset',r.message,'info')}
+ catch(err){authMsg(err.message)}
+ busy($('auFGo'),false,'Send reset code');
+});
+$('auReset').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const uid=$('auRUid').value.trim(),code=$('auRCode').value.trim(),n1=$('auRNew').value,n2=$('auRNew2').value;
+ if(!uid||!code||!n1){authMsg('Enter the User ID, the reset code and a new password.');return}
+ if(n1!==n2){authMsg('The new passwords do not match.');return}
+ const pr=pwProblem(n1,uid);if(pr){authMsg(pr);return}
+ busy($('auRGo'),true,'Resetting…');authMsg('');
+ try{await rpc({action:'reset',userId:uid,code,newPassword:n1});
+  $('auRNew').value=$('auRNew2').value=$('auRCode').value='';$('auUid').value=uid;$('auPw').value='';
+  showAuth('login','Password changed. Sign in with your new password.','ok')}
+ catch(err){authMsg(err.message)}
+ busy($('auRGo'),false,'Reset password');
+});
+$('acctPw').onclick=()=>{Auth.forced=false;$('auCOld').value=$('auCNew').value=$('auCNew2').value='';showAuth('change')};
+$('auCCancel').onclick=()=>hideAuth();
+$('auChange').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const old=$('auCOld').value,n1=$('auCNew').value,n2=$('auCNew2').value;
+ if(!old||!n1){authMsg('Enter the current and the new password.');return}
+ if(n1!==n2){authMsg('The new passwords do not match.');return}
+ const pr=pwProblem(n1,Auth.user&&Auth.user.uid);if(pr){authMsg(pr);return}
+ busy($('auCGo'),true,'Saving…');authMsg('');
+ try{
+  const r=await rpc({action:'changePassword',oldPassword:old,newPassword:n1}),was=Auth.forced;
+  $('auCOld').value=$('auCNew').value=$('auCNew2').value='';
+  Auth.token=r.token;Auth.user=r.user;Auth.forced=false;storeTok(r.token);USER=r.user.name;
+  if(was)enterApp();
+  else{hideAuth();$('acctMsg').textContent='Password changed';setTimeout(()=>{$('acctMsg').textContent=''},4000)}
+ }catch(err){authMsg(err.message)}
+ busy($('auCGo'),false,'Change password');
+});
+$('acctOut').onclick=signOut;
+async function boot(){
+ if(backend()==='none'){document.body.classList.remove('locked');badge();return}      // demo mode: no sheet, no sign in
+ const t=loadTok();
+ if(!t){showAuth('login');return}
+ Auth.token=t;
+ try{
+  const r=await rpc({action:'me'});
+  Auth.user=r.user;Auth.forced=!!r.user.must;USER=r.user.name;
+  if(Auth.forced)showAuth('change','Your password is temporary.','info');else enterApp();
+ }catch(err){
+  if(!$('authView').classList.contains('on')){Auth.token='';storeTok('');showAuth('login','Could not reach the server: '+err.message)}
+ }
+}
+/* ---------- User Setup (administrator) ---------- */
+const US={list:[],edit:''};
+const usMsg=(t,ok)=>{$('usMsg').textContent=t||'';$('usMsg').className=ok?'ok':''};
+function usClear(){
+ US.edit='';$('usUid').value=$('usName').value=$('usEmail').value='';$('usUid').readOnly=false;
+ $('usRole').value='User';$('usStatus').value='Active';$('usTitle').textContent='Add user';usMsg('');
+ $('usAp1').value=$('usAp2').value='';fillApprovers();
+}
+function usTemp(uid,pw){
+ const b=$('usTemp');
+ b.innerHTML='One-time password for <b>'+esc(uid)+'</b>: <code>'+esc(pw)+'</code><button type="button" id="usCopy">Copy</button><br><span class="more">Share it privately. The user must choose a new password at first sign-in. It is not shown again.</span>';
+ b.classList.add('on');
+ $('usCopy').onclick=()=>{try{navigator.clipboard.writeText(pw);$('usCopy').textContent='Copied'}catch(e){}};
+}
+function usRender(){
+ const pend=US.list.map((u,k)=>({u,k})).filter(x=>x.u.status==='Pending');
+ setPend(pend.length);
+ $('usPendCard').hidden=!pend.length;
+ $('usPendT').textContent='Pending registration requests ('+pend.length+')';
+ $('usPend').innerHTML=pend.map(x=>`<tr><td><b>${esc(x.u.uid)}</b></td><td>${esc(x.u.name)}</td><td>${esc(x.u.email)}</td><td>${esc(x.u.created||'')}</td><td><select aria-label='Role for ${esc(x.u.uid)}'><option>User</option><option>Admin</option></select></td><td class='acts'><button type='button' class='ab v' data-a='ok' data-i='${x.k}'>Approve</button><button type='button' class='ab dl' data-a='no' data-i='${x.k}'>Reject</button></td></tr>`).join('');
+ const act=US.list.map((u,k)=>({u,k})).filter(x=>x.u.status!=='Pending');
+ $('usList').innerHTML=act.length?act.map(x=>{const u=x.u,k=x.k;return `<tr><td>${k+1}</td><td><b>${esc(u.uid)}</b></td><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td><span class='st ${u.status==='Active'?'c':'d'}'>${esc(u.status.toUpperCase())}</span>${u.locked?" <span class='st r'>LOCKED</span>":''}${u.must==='Yes'?" <span class='st w'>TEMP PW</span>":''}</td><td>${u.ap1?esc(usNm(u.ap1))+(u.ap2?' → '+esc(usNm(u.ap2)):''):"<span class='more'>none (auto-approved)</span>"}</td><td>${esc(u.last||'Never')}</td><td class='acts'><button type='button' class='ab v' data-a='edit' data-i='${k}'>Edit</button><button type='button' class='ab v' data-a='pw' data-i='${k}'>Reset Password</button><button type='button' class='ab dl' data-a='del' data-i='${k}'>Delete</button></td></tr>`}).join(''):`<tr><td colspan='9' class='empty'>No users.</td></tr>`;
+ fillApprovers();
+}
+const usNm=uid=>{const x=US.list.find(y=>y.uid===uid);return x?x.name:uid};
+function fillApprovers(){
+ const v1=$('usAp1').value,v2=$('usAp2').value;
+ const opts='<option value="">— None —</option>'+US.list.filter(u=>u.status==='Active'&&u.uid!==US.edit).map(u=>`<option value="${esc(u.uid)}">${esc(u.name)} (${esc(u.uid)})</option>`).join('');
+ $('usAp1').innerHTML=opts;$('usAp2').innerHTML=opts;$('usAp1').value=v1;$('usAp2').value=v2;
+}
+async function usLoad(){const r=await rpc({action:'listUsers'});US.list=r.users;usRender()}
+async function openUsers(){
+ const deny=t=>{$('usNote').textContent=t;$('usFormWrap').hidden=true;$('usListCard').hidden=true;$('usTemp').classList.remove('on')};
+ if(backend()==='none')return deny('Demo mode: connect the app to a Google Sheet to manage users.');
+ if(!Auth.user||Auth.user.role!=='Admin')return deny('Only an administrator can open User Setup.');
+ $('usNote').textContent='';$('usFormWrap').hidden=false;$('usListCard').hidden=false;
+ try{await usLoad()}catch(e){usMsg(e.message)}
+}
+$('usSave').onclick=async()=>{
+ const rec={uid:$('usUid').value.trim(),name:$('usName').value.trim(),email:$('usEmail').value.trim(),role:$('usRole').value,status:$('usStatus').value,ap1:$('usAp1').value,ap2:$('usAp2').value};
+ if(!rec.uid||!rec.name){usMsg('Enter the User ID and the full name.');return}
+ try{
+  const isNew=!US.edit,r=await rpc({action:'saveUser',rec,isNew});
+  usClear();usMsg(rec.uid+' saved.',true);
+  if(isNew&&r.tempPassword)usTemp(rec.uid,r.tempPassword);else $('usTemp').classList.remove('on');
+  await usLoad();
+ }catch(e){usMsg(e.message)}
+};
+$('usClear').onclick=usClear;
+$('acctPend').onclick=()=>{const a=nav.querySelector('a[data-name="User Setup"]');if(a)a.click()};
+$('usPend').onclick=async e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const u=US.list[+b.dataset.i],a=b.dataset.a;
+ if(a==='no'&&!b.dataset.arm){
+  b.dataset.arm=1;b.textContent='Confirm';
+  setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Reject'}},3000);return;
+ }
+ try{
+  if(a==='ok'){await rpc({action:'approveUser',uid:u.uid,role:b.closest('tr').querySelector('select').value});usMsg(u.uid+' approved.',true)}
+  else{await rpc({action:'rejectUser',uid:u.uid});usMsg(u.uid+' rejected.',true)}
+  await usLoad();
+ }catch(err){usMsg(err.message);try{await usLoad()}catch(x){}}
+};
+$('usList').onclick=async e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const u=US.list[+b.dataset.i],a=b.dataset.a;
+ if(a==='edit'){
+  US.edit=u.uid;$('usUid').value=u.uid;$('usUid').readOnly=true;$('usName').value=u.name;$('usEmail').value=u.email;
+  $('usRole').value=u.role;$('usStatus').value=u.status;$('usTitle').textContent='Edit user '+u.uid;usMsg('');
+  fillApprovers();$('usAp1').value=u.ap1||'';$('usAp2').value=u.ap2||'';
+  window.scrollTo({top:0,behavior:'smooth'});return;
+ }
+ if(!b.dataset.arm){
+  b.dataset.arm=1;const o=b.textContent;b.textContent='Confirm';
+  setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent=o}},3000);return;
+ }
+ try{
+  if(a==='pw'){const r=await rpc({action:'resetUserPassword',uid:u.uid});usTemp(u.uid,r.tempPassword);usMsg('Password reset for '+u.uid+'.',true)}
+  else{await rpc({action:'deleteUser',uid:u.uid});$('usTemp').classList.remove('on');usMsg(u.uid+' deleted.',true);if(US.edit===u.uid)usClear()}
+  await usLoad();
+ }catch(err){usMsg(err.message);try{await usLoad()}catch(x){}}
+};
+boot();
+</script>
+</body>
+</html>
